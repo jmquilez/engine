@@ -77,10 +77,10 @@ std::unique_ptr<Engine> CreateEngine(
 void PerformInitializationTasks(Settings& settings) {
   {
     fml::LogSettings log_settings;
-    // NOTE HACK!
-    log_settings.min_log_level = fml::LOG_INFO;
-    //    log_settings.min_log_level =
-    //        settings.verbose_logging ? fml::LOG_INFO : fml::LOG_ERROR;
+    log_settings.min_log_level =
+        settings.verbose_logging ? fml::LOG_INFO : fml::LOG_ERROR;
+    // NOTE HACK if using the following line:
+    //    log_settings.min_log_level = fml::LOG_INFO;
     fml::SetLogSettings(log_settings);
   }
 
