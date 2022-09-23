@@ -30,11 +30,18 @@ VsyncWaiterAndroid::~VsyncWaiterAndroid() = default;
 
 // |VsyncWaiter|
 void VsyncWaiterAndroid::AwaitVSync() {
+  FML_DLOG(INFO)
+      << "hi VsyncWaiterAndroid::AwaitVSync start use_ndk_choreographer_="
+      << use_ndk_choreographer_;
   if (use_ndk_choreographer_) {
     auto* weak_this = new std::weak_ptr<VsyncWaiter>(shared_from_this());
     fml::TaskRunner::RunNowOrPostTask(
         task_runners_.GetUITaskRunner(), [weak_this]() {
+          FML_DLOG(INFO) << "hi VsyncWaiterAndroid::AwaitVSync UITaskRunner "
+                            "RunNowOrPostTask start";
           AndroidChoreographer::PostFrameCallback(&OnVsyncFromNDK, weak_this);
+          FML_DLOG(INFO) << "hi VsyncWaiterAndroid::AwaitVSync UITaskRunner "
+                            "RunNowOrPostTask end";
         });
   } else {
     // TODO(99798): Remove it when we drop support for API level < 29.
@@ -48,10 +55,12 @@ void VsyncWaiterAndroid::AwaitVSync() {
       );
     });
   }
+  FML_DLOG(INFO) << "hi VsyncWaiterAndroid::AwaitVSync end";
 }
 
 // static
 void VsyncWaiterAndroid::OnVsyncFromNDK(int64_t frame_nanos, void* data) {
+  FML_DLOG(INFO) << "hi VsyncWaiterAndroid::OnVsyncFromNDK start";
   TRACE_EVENT0("flutter", "VSYNC");
 
   auto frame_time = fml::TimePoint::FromEpochDelta(
@@ -64,6 +73,7 @@ void VsyncWaiterAndroid::OnVsyncFromNDK(int64_t frame_nanos, void* data) {
                                       1000000000.0 / g_refresh_rate_);
   auto* weak_this = reinterpret_cast<std::weak_ptr<VsyncWaiter>*>(data);
   ConsumePendingCallback(weak_this, frame_time, target_time);
+  FML_DLOG(INFO) << "hi VsyncWaiterAndroid::OnVsyncFromNDK end";
 }
 
 // static
@@ -72,6 +82,7 @@ void VsyncWaiterAndroid::OnVsyncFromJava(JNIEnv* env,
                                          jlong frameDelayNanos,
                                          jlong refreshPeriodNanos,
                                          jlong java_baton) {
+  FML_DLOG(INFO) << "hi VsyncWaiterAndroid::OnVsyncFromJava start";
   TRACE_EVENT0("flutter", "VSYNC");
 
   auto frame_time =
@@ -81,6 +92,7 @@ void VsyncWaiterAndroid::OnVsyncFromJava(JNIEnv* env,
 
   auto* weak_this = reinterpret_cast<std::weak_ptr<VsyncWaiter>*>(java_baton);
   ConsumePendingCallback(weak_this, frame_time, target_time);
+  FML_DLOG(INFO) << "hi VsyncWaiterAndroid::OnVsyncFromJava end";
 }
 
 // static

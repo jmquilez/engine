@@ -1111,6 +1111,7 @@ const Settings& Shell::OnPlatformViewGetSettings() const {
 // |Animator::Delegate|
 void Shell::OnAnimatorBeginFrame(fml::TimePoint frame_target_time,
                                  uint64_t frame_number) {
+  FML_DLOG(INFO) << "hi Shell::OnAnimatorBeginFrame start";
   FML_DCHECK(is_setup_);
   FML_DCHECK(task_runners_.GetUITaskRunner()->RunsTasksOnCurrentThread());
 
@@ -1122,6 +1123,7 @@ void Shell::OnAnimatorBeginFrame(fml::TimePoint frame_target_time,
   if (engine_) {
     engine_->BeginFrame(frame_target_time, frame_number);
   }
+  FML_DLOG(INFO) << "hi Shell::OnAnimatorBeginFrame end";
 }
 
 // |Animator::Delegate|
@@ -1152,6 +1154,7 @@ void Shell::OnAnimatorUpdateLatestFrameTargetTime(
 
 // |Animator::Delegate|
 void Shell::OnAnimatorDraw(std::shared_ptr<LayerTreePipeline> pipeline) {
+  FML_DLOG(INFO) << "hi Shell::OnAnimatorDraw start";
   FML_DCHECK(is_setup_);
 
   auto discard_callback = [this](flutter::LayerTree& tree) {
@@ -1166,10 +1169,18 @@ void Shell::OnAnimatorDraw(std::shared_ptr<LayerTreePipeline> pipeline) {
        rasterizer = rasterizer_->GetWeakPtr(),
        weak_pipeline = std::weak_ptr<LayerTreePipeline>(pipeline),
        discard_callback = std::move(discard_callback)]() mutable {
+        FML_DLOG(INFO) << "hi Shell::OnAnimatorDraw inside "
+                          "RasterTaskRunner->PostTask callback start";
         if (rasterizer) {
           std::shared_ptr<LayerTreePipeline> pipeline = weak_pipeline.lock();
           if (pipeline) {
+            FML_DLOG(INFO)
+                << "hi Shell::OnAnimatorDraw inside RasterTaskRunner->PostTask "
+                   "callback call rasterizer->Draw start";
             rasterizer->Draw(std::move(pipeline), std::move(discard_callback));
+            FML_DLOG(INFO)
+                << "hi Shell::OnAnimatorDraw inside RasterTaskRunner->PostTask "
+                   "callback call rasterizer->Draw end";
           }
 
           if (waiting_for_first_frame.load()) {
@@ -1177,7 +1188,10 @@ void Shell::OnAnimatorDraw(std::shared_ptr<LayerTreePipeline> pipeline) {
             waiting_for_first_frame_condition.notify_all();
           }
         }
+        FML_DLOG(INFO) << "hi Shell::OnAnimatorDraw inside "
+                          "RasterTaskRunner->PostTask callback end";
       }));
+  FML_DLOG(INFO) << "hi Shell::OnAnimatorDraw end";
 }
 
 // |Animator::Delegate|

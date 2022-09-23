@@ -205,15 +205,27 @@ void PlatformConfiguration::BeginFrame(fml::TimePoint frameTime,
 
   int64_t microseconds = (frameTime - fml::TimePoint()).ToMicroseconds();
 
+  FML_DLOG(INFO)
+      << "hi PlatformConfiguration::BeginFrame call dart begin_frame_ start";
   tonic::CheckAndHandleError(
       tonic::DartInvoke(begin_frame_.Get(), {
                                                 Dart_NewInteger(microseconds),
                                                 Dart_NewInteger(frame_number),
                                             }));
+  FML_DLOG(INFO)
+      << "hi PlatformConfiguration::BeginFrame call dart begin_frame_ end";
 
+  FML_DLOG(INFO)
+      << "hi PlatformConfiguration::BeginFrame call FlushMicrotasksNow start";
   UIDartState::Current()->FlushMicrotasksNow();
+  FML_DLOG(INFO)
+      << "hi PlatformConfiguration::BeginFrame call FlushMicrotasksNow end";
 
+  FML_DLOG(INFO)
+      << "hi PlatformConfiguration::BeginFrame call dart draw_frame_ start";
   tonic::CheckAndHandleError(tonic::DartInvokeVoid(draw_frame_.Get()));
+  FML_DLOG(INFO)
+      << "hi PlatformConfiguration::BeginFrame call dart draw_frame_ end";
 }
 
 void PlatformConfiguration::ReportTimings(std::vector<int64_t> timings) {

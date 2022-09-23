@@ -65,6 +65,16 @@ static fml::TimePoint FxlToDartOrEarlier(fml::TimePoint time) {
 
 void Animator::BeginFrame(
     std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
+  FML_DLOG(INFO) << "hi Animator::BeginFrame start";
+
+  // test logs
+  FML_DLOG(INFO) << "hi this is FML_DLOG(INFO)";
+  FML_LOG(INFO) << "hi this is FML_LOG(INFO)";
+  FML_DLOG(WARNING) << "hi this is FML_DLOG(WARNING)";
+  FML_LOG(WARNING) << "hi this is FML_LOG(WARNING)";
+  FML_DLOG(ERROR) << "hi this is FML_DLOG(ERROR)";
+  FML_LOG(ERROR) << "hi this is FML_LOG(ERROR)";
+
   TRACE_EVENT_ASYNC_END0("flutter", "Frame Request Pending",
                          frame_request_number_);
   frame_request_number_++;
@@ -85,7 +95,10 @@ void Animator::BeginFrame(
   regenerate_layer_tree_ = false;
   pending_frame_semaphore_.Signal();
 
+  FML_DLOG(INFO) << "hi Animator::BeginFrame producer_continuation_="
+                 << static_cast<bool>(producer_continuation_);
   if (!producer_continuation_) {
+    FML_DLOG(INFO) << "hi Animator::BeginFrame call pipeline->Produce";
     // We may already have a valid pipeline continuation in case a previous
     // begin frame did not result in an Animation::Render. Simply reuse that
     // instead of asking the pipeline for a fresh continuation.
@@ -97,6 +110,7 @@ void Animator::BeginFrame(
       // frame interval.
       TRACE_EVENT0("flutter", "PipelineFull");
       RequestFrame();
+      FML_DLOG(INFO) << "hi Animator::BeginFrame return since pipelinefull";
       return;
     }
   }
@@ -142,9 +156,12 @@ void Animator::BeginFrame(
         },
         kNotifyIdleTaskWaitTime);
   }
+  FML_DLOG(INFO) << "hi Animator::BeginFrame end normally";
 }
 
 void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
+  FML_DLOG(INFO) << "hi Animator::Render start";
+
   has_rendered_ = true;
   last_layer_tree_size_ = layer_tree->frame_size();
 
@@ -163,6 +180,7 @@ void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
   delegate_.OnAnimatorUpdateLatestFrameTargetTime(
       frame_timings_recorder_->GetVsyncTargetTime());
 
+  FML_DLOG(INFO) << "hi Animator::Render call producer_continuation_.Complete";
   auto layer_tree_item = std::make_unique<LayerTreeItem>(
       std::move(layer_tree), std::move(frame_timings_recorder_));
   // Commit the pending continuation.
@@ -170,6 +188,7 @@ void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
       producer_continuation_.Complete(std::move(layer_tree_item));
 
   if (!result.success) {
+    FML_DLOG(INFO) << "hi Animator::Render return since !success";
     FML_DLOG(INFO) << "No pending continuation to commit";
     return;
   }
@@ -178,10 +197,14 @@ void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
     // It has been successfully pushed to the pipeline but not as the first
     // item. Eventually the 'Rasterizer' will consume it, so we don't need to
     // notify the delegate.
+    FML_DLOG(INFO) << "hi Animator::Render return since !is_first_item";
     return;
   }
 
+  FML_DLOG(INFO) << "hi Animator::Render call OnAnimatorDraw";
   delegate_.OnAnimatorDraw(layer_tree_pipeline_);
+
+  FML_DLOG(INFO) << "hi Animator::Render end normally";
 }
 
 const std::weak_ptr<VsyncWaiter> Animator::GetVsyncWaiter() const {
@@ -207,6 +230,7 @@ void Animator::DrawLastLayerTree(
 }
 
 void Animator::RequestFrame(bool regenerate_layer_tree) {
+  FML_DLOG(INFO) << "hi Animator::RequestFrame start";
   if (regenerate_layer_tree) {
     regenerate_layer_tree_ = true;
   }
@@ -214,6 +238,7 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
   if (!pending_frame_semaphore_.TryWait()) {
     // Multiple calls to Animator::RequestFrame will still result in a
     // single request to the VsyncWaiter.
+    FML_DLOG(INFO) << "hi Animator::RequestFrame early return";
     return;
   }
 
@@ -227,31 +252,46 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
   task_runners_.GetUITaskRunner()->PostTask(
       [self = weak_factory_.GetWeakPtr(),
        frame_request_number = frame_request_number_]() {
+        FML_DLOG(INFO)
+            << "hi Animator::RequestFrame UITaskRunner PostTask callback start";
         if (!self) {
           return;
         }
         TRACE_EVENT_ASYNC_BEGIN0("flutter", "Frame Request Pending",
                                  frame_request_number);
         self->AwaitVSync();
+        FML_DLOG(INFO)
+            << "hi Animator::RequestFrame UITaskRunner PostTask callback end";
       });
   frame_scheduled_ = true;
+  FML_DLOG(INFO) << "hi Animator::RequestFrame end";
 }
 
 void Animator::AwaitVSync() {
+  FML_DLOG(INFO) << "hi Animator::AwaitVSync start";
   waiter_->AsyncWaitForVsync(
       [self = weak_factory_.GetWeakPtr()](
           std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
+        FML_DLOG(INFO)
+            << "hi Animator::AwaitVSync AsyncWaitForVsync callback start";
         if (self) {
           if (self->CanReuseLastLayerTree()) {
+            FML_DLOG(INFO) << "hi Animator::AwaitVSync AsyncWaitForVsync "
+                              "callback call DrawLastLayerTree";
             self->DrawLastLayerTree(std::move(frame_timings_recorder));
           } else {
+            FML_DLOG(INFO) << "hi Animator::AwaitVSync AsyncWaitForVsync "
+                              "callback call BeginFrame";
             self->BeginFrame(std::move(frame_timings_recorder));
           }
         }
+        FML_DLOG(INFO)
+            << "hi Animator::AwaitVSync AsyncWaitForVsync callback end";
       });
   if (has_rendered_) {
     delegate_.OnAnimatorNotifyIdle(dart_frame_deadline_);
   }
+  FML_DLOG(INFO) << "hi Animator::AwaitVSync end";
 }
 
 void Animator::ScheduleSecondaryVsyncCallback(uintptr_t id,
