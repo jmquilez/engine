@@ -82,9 +82,15 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
                                fml::TimePoint frame_target_time,
                                bool pause_secondary_tasks) {
   FML_DLOG(INFO)
-      << "hi VsyncWaiter::FireCallback start "
-         "is-on-platform-thread="
-      << task_runners_.GetPlatformTaskRunner()->RunsTasksOnCurrentThread();
+      << "hi VsyncWaiter::FireCallback start"
+      << " this_thread_id=" << pthread_self() << " is-on-platform-thread="
+      << task_runners_.GetPlatformTaskRunner()->RunsTasksOnCurrentThread()
+      << " is-on-ui-thread="
+      << task_runners_.GetUITaskRunner()->RunsTasksOnCurrentThread()
+      << " is-on-io-thread="
+      << task_runners_.GetIOTaskRunner()->RunsTasksOnCurrentThread()
+      << " is-on-raster-thread="
+      << task_runners_.GetRasterTaskRunner()->RunsTasksOnCurrentThread();
   FML_DCHECK(fml::TimePoint::Now() >= frame_start_time);
 
   Callback callback;

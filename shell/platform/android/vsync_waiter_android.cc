@@ -38,7 +38,8 @@ void VsyncWaiterAndroid::AwaitVSync() {
     fml::TaskRunner::RunNowOrPostTask(
         task_runners_.GetUITaskRunner(), [weak_this]() {
           FML_DLOG(INFO) << "hi VsyncWaiterAndroid::AwaitVSync UITaskRunner "
-                            "RunNowOrPostTask start";
+                            "RunNowOrPostTask start"
+                         << " this_thread_id=" << pthread_self();
           AndroidChoreographer::PostFrameCallback(&OnVsyncFromNDK, weak_this);
           FML_DLOG(INFO) << "hi VsyncWaiterAndroid::AwaitVSync UITaskRunner "
                             "RunNowOrPostTask end";
@@ -60,7 +61,8 @@ void VsyncWaiterAndroid::AwaitVSync() {
 
 // static
 void VsyncWaiterAndroid::OnVsyncFromNDK(int64_t frame_nanos, void* data) {
-  FML_DLOG(INFO) << "hi VsyncWaiterAndroid::OnVsyncFromNDK start";
+  FML_DLOG(INFO) << "hi VsyncWaiterAndroid::OnVsyncFromNDK start"
+                 << " this_thread_id=" << pthread_self();
   TRACE_EVENT0("flutter", "VSYNC");
 
   auto frame_time = fml::TimePoint::FromEpochDelta(
