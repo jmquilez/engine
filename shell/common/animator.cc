@@ -98,11 +98,15 @@ void Animator::BeginFrame(
   FML_DLOG(INFO) << "hi Animator::BeginFrame producer_continuation_="
                  << static_cast<bool>(producer_continuation_);
   if (!producer_continuation_) {
-    FML_DLOG(INFO) << "hi Animator::BeginFrame call pipeline->Produce";
+    FML_DLOG(INFO) << "hi Animator::BeginFrame call producer_continuation_ := "
+                      "pipeline->Produce";
     // We may already have a valid pipeline continuation in case a previous
     // begin frame did not result in an Animation::Render. Simply reuse that
     // instead of asking the pipeline for a fresh continuation.
     producer_continuation_ = layer_tree_pipeline_->Produce();
+    FML_DLOG(INFO)
+        << "hi Animator::BeginFrame after call produce producer_continuation_="
+        << static_cast<bool>(producer_continuation_);
 
     if (!producer_continuation_) {
       // If we still don't have valid continuation, the pipeline is currently
@@ -180,7 +184,9 @@ void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
   delegate_.OnAnimatorUpdateLatestFrameTargetTime(
       frame_timings_recorder_->GetVsyncTargetTime());
 
-  FML_DLOG(INFO) << "hi Animator::Render call producer_continuation_.Complete";
+  FML_DLOG(INFO) << "hi Animator::Render call producer_continuation_.Complete"
+                 << " produce producer_continuation_="
+                 << static_cast<bool>(producer_continuation_);
   auto layer_tree_item = std::make_unique<LayerTreeItem>(
       std::move(layer_tree), std::move(frame_timings_recorder_));
   // Commit the pending continuation.
