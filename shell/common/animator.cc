@@ -67,13 +67,13 @@ void Animator::BeginFrame(
     std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
   FML_DLOG(INFO) << "hi Animator::BeginFrame start";
 
-  // test logs
-  FML_DLOG(INFO) << "hi this is FML_DLOG(INFO)";
-  FML_LOG(INFO) << "hi this is FML_LOG(INFO)";
-  FML_DLOG(WARNING) << "hi this is FML_DLOG(WARNING)";
-  FML_LOG(WARNING) << "hi this is FML_LOG(WARNING)";
-  FML_DLOG(ERROR) << "hi this is FML_DLOG(ERROR)";
-  FML_LOG(ERROR) << "hi this is FML_LOG(ERROR)";
+//  // test logs
+//  FML_DLOG(INFO) << "hi this is FML_DLOG(INFO)";
+//  FML_LOG(INFO) << "hi this is FML_LOG(INFO)";
+//  FML_DLOG(WARNING) << "hi this is FML_DLOG(WARNING)";
+//  FML_LOG(WARNING) << "hi this is FML_LOG(WARNING)";
+//  FML_DLOG(ERROR) << "hi this is FML_DLOG(ERROR)";
+//  FML_LOG(ERROR) << "hi this is FML_LOG(ERROR)";
 
   TRACE_EVENT_ASYNC_END0("flutter", "Frame Request Pending",
                          frame_request_number_);
