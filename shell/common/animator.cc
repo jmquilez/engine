@@ -184,6 +184,17 @@ void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
   delegate_.OnAnimatorUpdateLatestFrameTargetTime(
       frame_timings_recorder_->GetVsyncTargetTime());
 
+  // ==== NOTE MODIFIED ADD start ====
+  if (!producer_continuation_) {
+    FML_DLOG(INFO) << "hi Animator::Render call EXTRA producer_continuation_ "
+                      ":= pipeline->Produce";
+    producer_continuation_ = layer_tree_pipeline_->Produce();
+    FML_DLOG(INFO)
+        << "hi Animator::Render after call produce producer_continuation_="
+        << static_cast<bool>(producer_continuation_);
+  }
+  // ==== NOTE MODIFIED ADD end ====
+
   FML_DLOG(INFO) << "hi Animator::Render call producer_continuation_.Complete"
                  << " produce producer_continuation_="
                  << static_cast<bool>(producer_continuation_);
