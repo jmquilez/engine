@@ -18,6 +18,28 @@ static constexpr const char* kVsyncFlowName = "VsyncFlow";
 
 static constexpr const char* kVsyncTraceName = "VsyncProcessCallback";
 
+fml::TimePoint LastVsyncInfo::GetVsyncStartTime() const {
+  std::scoped_lock state_lock(mutex_);
+  return vsync_start_;
+}
+
+fml::TimePoint LastVsyncInfo::GetVsyncTargetTime() const {
+  std::scoped_lock state_lock(mutex_);
+  return vsync_target_;
+}
+
+void LastVsyncInfo::RecordVsync(fml::TimePoint vsync_start,
+                                fml::TimePoint vsync_target) {
+  std::scoped_lock state_lock(mutex_);
+  vsync_start_ = vsync_start;
+  vsync_target_ = vsync_target;
+}
+
+LastVsyncInfo& LastVsyncInfo::Instance() {
+  static LastVsyncInfo instance;
+  return instance;
+}
+
 VsyncWaiter::VsyncWaiter(TaskRunners task_runners)
     : task_runners_(std::move(task_runners)) {}
 
@@ -92,6 +114,8 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
       << " is-on-raster-thread="
       << task_runners_.GetRasterTaskRunner()->RunsTasksOnCurrentThread();
   FML_DCHECK(fml::TimePoint::Now() >= frame_start_time);
+
+  LastVsyncInfo::Instance().RecordVsync(frame_start_time, frame_target_time);
 
   Callback callback;
   std::vector<fml::closure> secondary_callbacks;

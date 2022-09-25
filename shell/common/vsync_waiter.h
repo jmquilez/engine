@@ -16,6 +16,24 @@
 
 namespace flutter {
 
+// just prototype. should not use static singleton for real implementation
+// impl ref [FrameTimingsRecorder]
+class LastVsyncInfo {
+ public:
+  LastVsyncInfo() {}
+  fml::TimePoint GetVsyncStartTime() const;
+  fml::TimePoint GetVsyncTargetTime() const;
+  void RecordVsync(fml::TimePoint vsync_start, fml::TimePoint vsync_target);
+  static LastVsyncInfo& Instance();
+
+ private:
+  mutable std::mutex mutex_;
+  fml::TimePoint vsync_start_;
+  fml::TimePoint vsync_target_;
+
+  FML_DISALLOW_COPY_ASSIGN_AND_MOVE(LastVsyncInfo);
+};
+
 /// Abstract Base Class that represents a platform specific mechanism for
 /// getting callbacks when a vsync event happens.
 class VsyncWaiter : public std::enable_shared_from_this<VsyncWaiter> {
