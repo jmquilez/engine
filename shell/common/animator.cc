@@ -286,13 +286,13 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
 
 void Animator::PreemptRequestVsync() {
   FML_DLOG(INFO) << "hi Animator::PreemptRequestVsync start";
-  waiter_->ScheduleSecondaryCallback(
-      reinterpret_cast<uintptr_t>(this), [self = weak_factory_.GetWeakPtr()] {
-        FML_DLOG(INFO) << "hi Animator::PreemptRequestVsync "
-                          "ScheduleSecondaryCallback callback start"
-                       << " this_thread_id=" << pthread_self();
-        // TODO
-      });
+  waiter_->ScheduleSecondaryCallback(reinterpret_cast<uintptr_t>(this), [] {
+    // hack: do NOT use this callback at all.
+    // this callback is run by PostTask to UI thread, but during janky frame and
+    // preempt, that surely will not be called
+    // in the real implementation, maybe write something like
+    // `ScheduleCallbackThatRunsOnPlatformThread`
+  });
 }
 
 void Animator::AwaitVSync() {
