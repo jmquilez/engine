@@ -32,7 +32,7 @@ fml::TimePoint LastVsyncInfo::GetVsyncTargetTime() const {
 void LastVsyncInfo::RecordVsync(fml::TimePoint vsync_start,
                                 fml::TimePoint vsync_target) {
   FML_DLOG(INFO) << "hi LastVsyncInfo::RecordVsync"
-                 << " vsync_start="
+                 << " this_thread_id=" << pthread_self() << " vsync_start="
                  << (vsync_start - fml::TimePoint()).ToMicroseconds()
                  << " vsync_target="
                  << (vsync_target - fml::TimePoint()).ToMicroseconds();
