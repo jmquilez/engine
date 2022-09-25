@@ -724,6 +724,15 @@ class PlatformDispatcher {
   @FfiNative<Void Function()>('PlatformConfigurationNativeApi::PreemptRequestVsync')
   external static void _preemptRequestVsync();
 
+  LastVsyncInfo lastVsyncInfo() {
+    final int raw = _lastVsyncInfo();
+    return LastVsyncInfo(vsyncTargetTime: Duration(microseconds: raw));
+  }
+
+  // prototype, should not really name/place here
+  @FfiNative<Int64 Function()>('LastVsyncInfo::ReadToDart')
+  external static int _lastVsyncInfo();
+
   /// Additional accessibility features that may be enabled by the platform.
   AccessibilityFeatures get accessibilityFeatures => configuration.accessibilityFeatures;
 
@@ -2180,4 +2189,13 @@ enum DartPerformanceMode {
   /// Optimize for low memory, at the expensive of throughput and latency by more
   /// frequently performing work.
   memory,
+}
+
+class LastVsyncInfo {
+  const LastVsyncInfo({required this.vsyncTargetTime});
+
+  final Duration vsyncTargetTime;
+
+  @override
+  String toString() => 'LastVsyncInfo{vsyncTargetTime: $vsyncTargetTime}';
 }

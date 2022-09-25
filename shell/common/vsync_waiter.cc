@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "flutter/shell/common/vsync_waiter.h"
+#include <tonic/typed_data/dart_byte_data.h>
 
 #include "flow/frame_timings.h"
 #include "flutter/fml/task_runner.h"
@@ -38,6 +39,19 @@ void LastVsyncInfo::RecordVsync(fml::TimePoint vsync_start,
 LastVsyncInfo& LastVsyncInfo::Instance() {
   static LastVsyncInfo instance;
   return instance;
+}
+
+int64_t LastVsyncInfo::ReadToDart() {
+  LastVsyncInfo& instance = Instance();
+  auto vsync_target_time = instance.GetVsyncTargetTime();
+
+  // ref OnAnimatorBeginFrame -> ... -> begin_frame_, uses GetVsyncTargetTime
+  // ref PlatformConfiguration::BeginFrame
+  int64_t microseconds =
+      (vsync_target_time - fml::TimePoint()).ToMicroseconds();
+  return microseconds;
+
+  //  return tonic::DartConverter<int64_t>::ToDart(microseconds);
 }
 
 VsyncWaiter::VsyncWaiter(TaskRunners task_runners)

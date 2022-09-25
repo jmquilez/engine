@@ -25,6 +25,7 @@ class LastVsyncInfo {
   fml::TimePoint GetVsyncTargetTime() const;
   void RecordVsync(fml::TimePoint vsync_start, fml::TimePoint vsync_target);
   static LastVsyncInfo& Instance();
+  static int64_t ReadToDart();
 
  private:
   mutable std::mutex mutex_;
