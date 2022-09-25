@@ -64,6 +64,8 @@ class PlatformConfigurationClient {
   ///
   virtual void ScheduleFrame() = 0;
 
+  virtual void PreemptRequestVsync() = 0;
+
   //--------------------------------------------------------------------------
   /// @brief      Updates the client's rendering on the GPU with the newly
   ///             provided Scene.
@@ -472,6 +474,8 @@ class PlatformConfigurationNativeApi {
   static std::string DefaultRouteName();
 
   static void ScheduleFrame();
+
+  static void PreemptRequestVsync();
 
   static void Render(Scene* scene);
 

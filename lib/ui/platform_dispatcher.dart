@@ -719,6 +719,11 @@ class PlatformDispatcher {
   @FfiNative<Void Function()>('PlatformConfigurationNativeApi::ScheduleFrame')
   external static void _scheduleFrame();
 
+  void preemptRequestVsync() => _preemptRequestVsync();
+
+  @FfiNative<Void Function()>('PlatformConfigurationNativeApi::PreemptRequestVsync')
+  external static void _preemptRequestVsync();
+
   /// Additional accessibility features that may be enabled by the platform.
   AccessibilityFeatures get accessibilityFeatures => configuration.accessibilityFeatures;
 

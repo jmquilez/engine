@@ -755,6 +755,9 @@ class Engine final : public RuntimeDelegate, PointerDataDispatcher::Delegate {
   // |RuntimeDelegate|
   void ScheduleFrame(bool regenerate_layer_tree) override;
 
+  // |RuntimeDelegate|
+  void PreemptRequestVsync() override;
+
   /// Schedule a frame with the default parameter of regenerating the layer
   /// tree.
   void ScheduleFrame() { ScheduleFrame(true); }

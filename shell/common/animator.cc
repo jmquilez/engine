@@ -284,6 +284,11 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
   FML_DLOG(INFO) << "hi Animator::RequestFrame end";
 }
 
+void Animator::PreemptRequestVsync() {
+  FML_DLOG(INFO) << "hi Animator::PreemptRequestVsync start";
+  // TODO
+}
+
 void Animator::AwaitVSync() {
   FML_DLOG(INFO) << "hi Animator::AwaitVSync start";
   waiter_->AsyncWaitForVsync(

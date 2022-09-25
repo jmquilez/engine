@@ -605,6 +605,9 @@ class RuntimeController : public PlatformConfigurationClient {
   void ScheduleFrame() override;
 
   // |PlatformConfigurationClient|
+  void PreemptRequestVsync() override;
+
+  // |PlatformConfigurationClient|
   void Render(Scene* scene) override;
 
   // |PlatformConfigurationClient|

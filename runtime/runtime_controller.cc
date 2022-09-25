@@ -279,6 +279,11 @@ void RuntimeController::ScheduleFrame() {
 }
 
 // |PlatformConfigurationClient|
+void RuntimeController::PreemptRequestVsync() {
+  client_.PreemptRequestVsync();
+}
+
+// |PlatformConfigurationClient|
 void RuntimeController::Render(Scene* scene) {
   client_.Render(scene->takeLayerTree());
 }
