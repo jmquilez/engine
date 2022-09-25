@@ -31,11 +31,11 @@ fml::TimePoint LastVsyncInfo::GetVsyncTargetTime() const {
 
 void LastVsyncInfo::RecordVsync(fml::TimePoint vsync_start,
                                 fml::TimePoint vsync_target) {
-  FML_DLOG(INFO) << "hi LastVsyncInfo::RecordVsync"
-                 << " this_thread_id=" << pthread_self() << " vsync_start="
-                 << (vsync_start - fml::TimePoint()).ToMicroseconds()
-                 << " vsync_target="
-                 << (vsync_target - fml::TimePoint()).ToMicroseconds();
+  //  FML_DLOG(INFO) << "hi LastVsyncInfo::RecordVsync"
+  //                 << " this_thread_id=" << pthread_self() << " vsync_start="
+  //                 << (vsync_start - fml::TimePoint()).ToMicroseconds()
+  //                 << " vsync_target="
+  //                 << (vsync_target - fml::TimePoint()).ToMicroseconds();
   std::scoped_lock state_lock(mutex_);
   vsync_start_ = vsync_start;
   vsync_target_ = vsync_target;
@@ -125,16 +125,16 @@ void VsyncWaiter::ScheduleSecondaryCallback(uintptr_t id,
 void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
                                fml::TimePoint frame_target_time,
                                bool pause_secondary_tasks) {
-  FML_DLOG(INFO)
-      << "hi VsyncWaiter::FireCallback start"
-      << " this_thread_id=" << pthread_self() << " is-on-platform-thread="
-      << task_runners_.GetPlatformTaskRunner()->RunsTasksOnCurrentThread()
-      << " is-on-ui-thread="
-      << task_runners_.GetUITaskRunner()->RunsTasksOnCurrentThread()
-      << " is-on-io-thread="
-      << task_runners_.GetIOTaskRunner()->RunsTasksOnCurrentThread()
-      << " is-on-raster-thread="
-      << task_runners_.GetRasterTaskRunner()->RunsTasksOnCurrentThread();
+  //  FML_DLOG(INFO)
+  //      << "hi VsyncWaiter::FireCallback start"
+  //      << " this_thread_id=" << pthread_self() << " is-on-platform-thread="
+  //      << task_runners_.GetPlatformTaskRunner()->RunsTasksOnCurrentThread()
+  //      << " is-on-ui-thread="
+  //      << task_runners_.GetUITaskRunner()->RunsTasksOnCurrentThread()
+  //      << " is-on-io-thread="
+  //      << task_runners_.GetIOTaskRunner()->RunsTasksOnCurrentThread()
+  //      << " is-on-raster-thread="
+  //      << task_runners_.GetRasterTaskRunner()->RunsTasksOnCurrentThread();
   FML_DCHECK(fml::TimePoint::Now() >= frame_start_time);
 
   LastVsyncInfo::Instance().RecordVsync(frame_start_time, frame_target_time);
@@ -159,8 +159,8 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
   // * With current hack, FireCallback is in platform thread
   // * Current AwaitVsync (android + not-ndk) can be called in PlatformThread
   // but need hack for other platforms as well
-  FML_DLOG(INFO) << "hi VsyncWaiter::FireCallback extra call AwaitVsync to "
-                    "ensure every frame we see info";
+  //  FML_DLOG(INFO) << "hi VsyncWaiter::FireCallback extra call AwaitVsync to "
+  //                    "ensure every frame we see info";
   ScheduleSecondaryCallback(
       reinterpret_cast<uintptr_t>(&LastVsyncInfo::Instance()), [] {},
       // NOTE do NOT sanity check thread, since closure is empty and we only
@@ -195,8 +195,9 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
     task_runners_.GetUITaskRunner()->PostTask(
         [ui_task_queue_id, callback, flow_identifier, frame_start_time,
          frame_target_time, pause_secondary_tasks]() {
-          FML_DLOG(INFO) << "hi VsyncWaiter::FireCallback inside UITaskRunner "
-                            "PostTask callback start";
+          //          FML_DLOG(INFO) << "hi VsyncWaiter::FireCallback inside
+          //          UITaskRunner "
+          //                            "PostTask callback start";
           FML_TRACE_EVENT("flutter", kVsyncTraceName, "StartTime",
                           frame_start_time, "TargetTime", frame_target_time);
           std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder =
@@ -208,15 +209,16 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
           if (pause_secondary_tasks) {
             ResumeDartMicroTasks(ui_task_queue_id);
           }
-          FML_DLOG(INFO) << "hi VsyncWaiter::FireCallback inside UITaskRunner "
-                            "PostTask callback end";
+          //          FML_DLOG(INFO) << "hi VsyncWaiter::FireCallback inside
+          //          UITaskRunner "
+          //                            "PostTask callback end";
         });
   }
 
   for (auto& secondary_callback : secondary_callbacks) {
     task_runners_.GetUITaskRunner()->PostTask(std::move(secondary_callback));
   }
-  FML_DLOG(INFO) << "hi VsyncWaiter::FireCallback end";
+  //  FML_DLOG(INFO) << "hi VsyncWaiter::FireCallback end";
 }
 
 void VsyncWaiter::PauseDartMicroTasks() {
