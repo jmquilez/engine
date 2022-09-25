@@ -719,11 +719,6 @@ class PlatformDispatcher {
   @FfiNative<Void Function()>('PlatformConfigurationNativeApi::ScheduleFrame')
   external static void _scheduleFrame();
 
-  void preemptRequestVsync() => _preemptRequestVsync();
-
-  @FfiNative<Void Function()>('PlatformConfigurationNativeApi::PreemptRequestVsync')
-  external static void _preemptRequestVsync();
-
   LastVsyncInfo lastVsyncInfo() {
     final int raw = _lastVsyncInfo();
     return LastVsyncInfo(vsyncTargetTime: Duration(microseconds: raw));

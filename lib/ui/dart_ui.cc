@@ -92,7 +92,6 @@ typedef CanvasPath Path;
   V(NativeStringAttribute::initSpellOutStringAttribute, 3)            \
   V(PlatformConfigurationNativeApi::DefaultRouteName, 0)              \
   V(PlatformConfigurationNativeApi::ScheduleFrame, 0)                 \
-  V(PlatformConfigurationNativeApi::PreemptRequestVsync, 0)           \
   V(LastVsyncInfo::ReadToDart, 0)                                     \
   V(PlatformConfigurationNativeApi::Render, 1)                        \
   V(PlatformConfigurationNativeApi::UpdateSemantics, 1)               \

@@ -439,10 +439,6 @@ void Engine::ScheduleFrame(bool regenerate_layer_tree) {
   animator_->RequestFrame(regenerate_layer_tree);
 }
 
-void Engine::PreemptRequestVsync() {
-  animator_->PreemptRequestVsync();
-}
-
 void Engine::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
   if (!layer_tree) {
     return;

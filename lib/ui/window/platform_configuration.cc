@@ -411,15 +411,6 @@ void PlatformConfigurationNativeApi::ScheduleFrame() {
   UIDartState::Current()->platform_configuration()->client()->ScheduleFrame();
 }
 
-// ref [ScheduleFrame]
-void PlatformConfigurationNativeApi::PreemptRequestVsync() {
-  UIDartState::ThrowIfUIOperationsProhibited();
-  UIDartState::Current()
-      ->platform_configuration()
-      ->client()
-      ->PreemptRequestVsync();
-}
-
 void PlatformConfigurationNativeApi::UpdateSemantics(SemanticsUpdate* update) {
   UIDartState::ThrowIfUIOperationsProhibited();
   UIDartState::Current()->platform_configuration()->client()->UpdateSemantics(
