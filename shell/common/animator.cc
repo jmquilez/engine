@@ -286,7 +286,13 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
 
 void Animator::PreemptRequestVsync() {
   FML_DLOG(INFO) << "hi Animator::PreemptRequestVsync start";
-  // TODO
+  waiter_->ScheduleSecondaryCallback(
+      reinterpret_cast<uintptr_t>(this), [self = weak_factory_.GetWeakPtr()] {
+        FML_DLOG(INFO) << "hi Animator::PreemptRequestVsync "
+                          "ScheduleSecondaryCallback callback start"
+                       << " this_thread_id=" << pthread_self();
+        // TODO
+      });
 }
 
 void Animator::AwaitVSync() {
