@@ -49,11 +49,16 @@ void VsyncWaiterAndroid::AwaitVSync() {
     auto* weak_this = new std::weak_ptr<VsyncWaiter>(shared_from_this());
     jlong java_baton = reinterpret_cast<jlong>(weak_this);
     task_runners_.GetPlatformTaskRunner()->PostTask([java_baton]() {
+      FML_DLOG(INFO) << "hi VsyncWaiterAndroid::AwaitVSync PlatformTaskRunner "
+                        "PostTask start"
+                     << " this_thread_id=" << pthread_self();
       JNIEnv* env = fml::jni::AttachCurrentThread();
       env->CallStaticVoidMethod(g_vsync_waiter_class->obj(),     //
                                 g_async_wait_for_vsync_method_,  //
                                 java_baton                       //
       );
+      FML_DLOG(INFO) << "hi VsyncWaiterAndroid::AwaitVSync PlatformTaskRunner "
+                        "PostTask end";
     });
   }
   FML_DLOG(INFO) << "hi VsyncWaiterAndroid::AwaitVSync end";
@@ -102,6 +107,7 @@ void VsyncWaiterAndroid::ConsumePendingCallback(
     std::weak_ptr<VsyncWaiter>* weak_this,
     fml::TimePoint frame_start_time,
     fml::TimePoint frame_target_time) {
+  FML_DLOG(INFO) << "hi VsyncWaiterAndroid::ConsumePendingCallback start";
   auto shared_this = weak_this->lock();
   delete weak_this;
 
