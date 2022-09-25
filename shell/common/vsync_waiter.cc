@@ -92,8 +92,11 @@ void VsyncWaiter::AsyncWaitForVsync(const Callback& callback) {
 }
 
 void VsyncWaiter::ScheduleSecondaryCallback(uintptr_t id,
-                                            const fml::closure& callback) {
-  FML_DCHECK(task_runners_.GetUITaskRunner()->RunsTasksOnCurrentThread());
+                                            const fml::closure& callback,
+                                            bool sanity_check_thread) {
+  // NOTE HACK #5831
+  FML_DCHECK(!sanity_check_thread ||
+             task_runners_.GetUITaskRunner()->RunsTasksOnCurrentThread());
 
   if (!callback) {
     return;
@@ -136,18 +139,6 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
 
   LastVsyncInfo::Instance().RecordVsync(frame_start_time, frame_target_time);
 
-  // hack: schedule immediately to ensure [LastVsyncInfo] is updated every 16ms
-  // in real implementation, will instead have real start/pause mechanism
-  // instead of such blindly refresh
-  // #5831
-  // NOTE HACK about threads:
-  // * With current hack, FireCallback is in platform thread
-  // * Current AwaitVsync (android + not-ndk) can be called in PlatformThread
-  // but need hack for other platforms as well
-  FML_DLOG(INFO) << "hi VsyncWaiter::FireCallback extra call AwaitVsync to "
-                    "ensure every frame we see info";
-  AwaitVSync();
-
   Callback callback;
   std::vector<fml::closure> secondary_callbacks;
 
@@ -159,6 +150,22 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
     }
     secondary_callbacks_.clear();
   }
+
+  // hack: schedule immediately to ensure [LastVsyncInfo] is updated every 16ms
+  // in real implementation, will instead have real start/pause mechanism
+  // instead of such blindly refresh
+  // #5831
+  // NOTE HACK about threads:
+  // * With current hack, FireCallback is in platform thread
+  // * Current AwaitVsync (android + not-ndk) can be called in PlatformThread
+  // but need hack for other platforms as well
+  FML_DLOG(INFO) << "hi VsyncWaiter::FireCallback extra call AwaitVsync to "
+                    "ensure every frame we see info";
+  ScheduleSecondaryCallback(
+      reinterpret_cast<uintptr_t>(&LastVsyncInfo::Instance()), [] {},
+      // NOTE do NOT sanity check thread, since closure is empty and we only
+      // want to trigger scheduling
+      false);
 
   if (!callback && secondary_callbacks.empty()) {
     // This means that the vsync waiter implementation fired a callback for a
