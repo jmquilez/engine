@@ -140,8 +140,13 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
   // in real implementation, will instead have real start/pause mechanism
   // instead of such blindly refresh
   // #5831
-  ScheduleSecondaryCallback(
-      reinterpret_cast<uintptr_t>(&LastVsyncInfo::Instance()), [] {});
+  // NOTE HACK about threads:
+  // * With current hack, FireCallback is in platform thread
+  // * Current AwaitVsync (android + not-ndk) can be called in PlatformThread
+  // but need hack for other platforms as well
+  FML_DLOG(INFO) << "hi VsyncWaiter::FireCallback extra call AwaitVsync to "
+                    "ensure every frame we see info";
+  AwaitVSync();
 
   Callback callback;
   std::vector<fml::closure> secondary_callbacks;
