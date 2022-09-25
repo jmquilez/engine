@@ -136,6 +136,13 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
 
   LastVsyncInfo::Instance().RecordVsync(frame_start_time, frame_target_time);
 
+  // hack: schedule immediately to ensure [LastVsyncInfo] is updated every 16ms
+  // in real implementation, will instead have real start/pause mechanism
+  // instead of such blindly refresh
+  // #5831
+  ScheduleSecondaryCallback(
+      reinterpret_cast<uintptr_t>(&LastVsyncInfo::Instance()), [] {});
+
   Callback callback;
   std::vector<fml::closure> secondary_callbacks;
 
