@@ -162,8 +162,6 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
   //      << task_runners_.GetRasterTaskRunner()->RunsTasksOnCurrentThread();
   FML_DCHECK(fml::TimePoint::Now() >= frame_start_time);
 
-  LastVsyncInfo::Instance().RecordVsync(frame_start_time, frame_target_time);
-
   Callback callback;
   std::vector<fml::closure> secondary_callbacks;
 
@@ -183,6 +181,10 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
     TRACE_EVENT_INSTANT0("flutter", "MismatchedFrameCallback");
     return;
   }
+
+  // NOTE must be after "callback empty then return", b/c a flutter bug
+  // #5835
+  LastVsyncInfo::Instance().RecordVsync(frame_start_time, frame_target_time);
 
   // hack: schedule immediately to ensure [LastVsyncInfo] is updated every 16ms
   // in real implementation, will instead have real start/pause mechanism
