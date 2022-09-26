@@ -23,7 +23,7 @@ class LastVsyncInfo {
   LastVsyncInfo() {}
   fml::TimePoint GetVsyncStartTime() const;
   fml::TimePoint GetVsyncTargetTime() const;
-  int64_t GetVsyncTargetDatetime() const;
+  int64_t GetDiffDateTimeTimePoint() const;
   void RecordVsync(fml::TimePoint vsync_start, fml::TimePoint vsync_target);
   static LastVsyncInfo& Instance();
   static Dart_Handle ReadToDart();
@@ -32,7 +32,7 @@ class LastVsyncInfo {
   mutable std::mutex mutex_;
   fml::TimePoint vsync_start_;
   fml::TimePoint vsync_target_;
-  int64_t vsync_target_datetime_;
+  int64_t diff_date_time_time_point_;
 
   FML_DISALLOW_COPY_ASSIGN_AND_MOVE(LastVsyncInfo);
 };

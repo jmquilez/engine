@@ -723,7 +723,7 @@ class PlatformDispatcher {
     final List<int> raw = _lastVsyncInfo();
     return LastVsyncInfo(
       vsyncTargetTime: Duration(microseconds: raw[0]),
-      vsyncTargetDateTime: DateTime.fromMicrosecondsSinceEpoch(raw[1]),
+      diffDateTimeTimePoint: raw[1],
     );
   }
 
@@ -2190,11 +2190,11 @@ enum DartPerformanceMode {
 }
 
 class LastVsyncInfo {
-  const LastVsyncInfo({required this.vsyncTargetTime, required this.vsyncTargetDateTime});
+  const LastVsyncInfo({required this.vsyncTargetTime, required this.diffDateTimeTimePoint});
 
   final Duration vsyncTargetTime;
-  final DateTime vsyncTargetDateTime;
+  final int diffDateTimeTimePoint;
 
   @override
-  String toString() => 'LastVsyncInfo{vsyncTargetTime: $vsyncTargetTime, vsyncTargetDateTime: $vsyncTargetDateTime}';
+  String toString() => 'LastVsyncInfo{vsyncTargetTime: $vsyncTargetTime, diffDateTimeTimePoint: $diffDateTimeTimePoint}';
 }

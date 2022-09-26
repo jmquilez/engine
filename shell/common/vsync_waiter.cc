@@ -30,9 +30,9 @@ fml::TimePoint LastVsyncInfo::GetVsyncTargetTime() const {
   return vsync_target_;
 }
 
-int64_t LastVsyncInfo::GetVsyncTargetDatetime() const {
+int64_t LastVsyncInfo::GetDiffDateTimeTimePoint() const {
   std::scoped_lock state_lock(mutex_);
-  return vsync_target_datetime_;
+  return diff_date_time_time_point_;
 }
 
 // ref: Dart DateTime.now() implementation
@@ -56,13 +56,13 @@ void LastVsyncInfo::RecordVsync(fml::TimePoint vsync_start,
 
   int64_t curr_datetime = DartCompatibleGetCurrentTimeMicros();
   fml::TimePoint curr_time = fml::TimePoint::Now();
-  int64_t vsync_target_datetime =
-      curr_datetime + (vsync_target - curr_time).ToMicroseconds();
+  int64_t diff_date_time_time_point =
+      curr_datetime - (curr_time - fml::TimePoint()).ToMicroseconds();
 
   std::scoped_lock state_lock(mutex_);
   vsync_start_ = vsync_start;
   vsync_target_ = vsync_target;
-  vsync_target_datetime_ = vsync_target_datetime;
+  diff_date_time_time_point_ = diff_date_time_time_point;
 }
 
 LastVsyncInfo& LastVsyncInfo::Instance() {
@@ -73,14 +73,14 @@ LastVsyncInfo& LastVsyncInfo::Instance() {
 Dart_Handle LastVsyncInfo::ReadToDart() {
   LastVsyncInfo& instance = Instance();
   auto vsync_target_time = instance.GetVsyncTargetTime();
-  auto vsync_target_datetime = instance.GetVsyncTargetDatetime();
+  auto diff_date_time_time_point = instance.GetDiffDateTimeTimePoint();
 
   // ref OnAnimatorBeginFrame -> ... -> begin_frame_, uses GetVsyncTargetTime
   // ref PlatformConfiguration::BeginFrame
   int64_t vsync_target_time_us =
       (vsync_target_time - fml::TimePoint()).ToMicroseconds();
 
-  std::vector<int64_t> data{vsync_target_time_us, vsync_target_datetime};
+  std::vector<int64_t> data{vsync_target_time_us, diff_date_time_time_point};
   return tonic::DartConverter<std::vector<int64_t>>::ToDart(data);
 }
 
