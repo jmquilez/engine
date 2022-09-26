@@ -48,11 +48,11 @@ int64_t DartCompatibleGetCurrentTimeMicros() {
 
 void LastVsyncInfo::RecordVsync(fml::TimePoint vsync_start,
                                 fml::TimePoint vsync_target) {
-  //  FML_DLOG(INFO) << "hi LastVsyncInfo::RecordVsync"
-  //                 << " this_thread_id=" << pthread_self() << " vsync_start="
-  //                 << (vsync_start - fml::TimePoint()).ToMicroseconds()
-  //                 << " vsync_target="
-  //                 << (vsync_target - fml::TimePoint()).ToMicroseconds();
+  FML_DLOG(INFO) << "hi LastVsyncInfo::RecordVsync"
+                 << " this_thread_id=" << pthread_self() << " vsync_start="
+                 << (vsync_start - fml::TimePoint()).ToMicroseconds()
+                 << " vsync_target="
+                 << (vsync_target - fml::TimePoint()).ToMicroseconds();
 
   int64_t curr_datetime = DartCompatibleGetCurrentTimeMicros();
   fml::TimePoint curr_time = fml::TimePoint::Now();
