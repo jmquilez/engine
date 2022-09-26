@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "flutter/shell/common/vsync_waiter.h"
+#include <sys/time.h>
 #include <tonic/typed_data/dart_byte_data.h>
 
 #include "flow/frame_timings.h"
@@ -29,6 +30,22 @@ fml::TimePoint LastVsyncInfo::GetVsyncTargetTime() const {
   return vsync_target_;
 }
 
+int64_t LastVsyncInfo::GetVsyncTargetDatetime() const {
+  std::scoped_lock state_lock(mutex_);
+  return vsync_target_datetime_;
+}
+
+// ref: Dart DateTime.now() implementation
+// https://github.com/fzyzcjy/yplusplus/issues/5834#issuecomment-1257329034
+int64_t DartCompatibleGetCurrentTimeMicros() {
+  // gettimeofday has microsecond resolution.
+  struct timeval tv;
+  if (gettimeofday(&tv, NULL) < 0) {
+    return 0;
+  }
+  return (static_cast<int64_t>(tv.tv_sec) * 1000000) + tv.tv_usec;
+}
+
 void LastVsyncInfo::RecordVsync(fml::TimePoint vsync_start,
                                 fml::TimePoint vsync_target) {
   //  FML_DLOG(INFO) << "hi LastVsyncInfo::RecordVsync"
@@ -36,9 +53,16 @@ void LastVsyncInfo::RecordVsync(fml::TimePoint vsync_start,
   //                 << (vsync_start - fml::TimePoint()).ToMicroseconds()
   //                 << " vsync_target="
   //                 << (vsync_target - fml::TimePoint()).ToMicroseconds();
+
+  int64_t curr_datetime = DartCompatibleGetCurrentTimeMicros();
+  fml::TimePoint curr_time = fml::TimePoint::Now();
+  int64_t vsync_target_datetime =
+      curr_datetime + (vsync_target - curr_time).ToMicroseconds();
+
   std::scoped_lock state_lock(mutex_);
   vsync_start_ = vsync_start;
   vsync_target_ = vsync_target;
+  vsync_target_datetime_ = vsync_target_datetime;
 }
 
 LastVsyncInfo& LastVsyncInfo::Instance() {
@@ -46,17 +70,18 @@ LastVsyncInfo& LastVsyncInfo::Instance() {
   return instance;
 }
 
-int64_t LastVsyncInfo::ReadToDart() {
+Dart_Handle LastVsyncInfo::ReadToDart() {
   LastVsyncInfo& instance = Instance();
   auto vsync_target_time = instance.GetVsyncTargetTime();
+  auto vsync_target_datetime = instance.GetVsyncTargetDatetime();
 
   // ref OnAnimatorBeginFrame -> ... -> begin_frame_, uses GetVsyncTargetTime
   // ref PlatformConfiguration::BeginFrame
-  int64_t microseconds =
+  int64_t vsync_target_time_us =
       (vsync_target_time - fml::TimePoint()).ToMicroseconds();
-  return microseconds;
 
-  //  return tonic::DartConverter<int64_t>::ToDart(microseconds);
+  std::vector<int64_t> data{vsync_target_time_us, vsync_target_datetime};
+  return tonic::DartConverter<std::vector<int64_t>>::ToDart(data);
 }
 
 VsyncWaiter::VsyncWaiter(TaskRunners task_runners)

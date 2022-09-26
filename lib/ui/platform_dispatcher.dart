@@ -720,13 +720,16 @@ class PlatformDispatcher {
   external static void _scheduleFrame();
 
   LastVsyncInfo lastVsyncInfo() {
-    final int raw = _lastVsyncInfo();
-    return LastVsyncInfo(vsyncTargetTime: Duration(microseconds: raw));
+    final List<int> raw = _lastVsyncInfo();
+    return LastVsyncInfo(
+      vsyncTargetTime: Duration(microseconds: raw[0]),
+      vsyncTargetDateTime: DateTime.fromMicrosecondsSinceEpoch(raw[1]),
+    );
   }
 
   // prototype, should not really name/place here
-  @FfiNative<Int64 Function()>('LastVsyncInfo::ReadToDart')
-  external static int _lastVsyncInfo();
+  @FfiNative<Handle Function()>('LastVsyncInfo::ReadToDart')
+  external static List<int> _lastVsyncInfo();
 
   /// Additional accessibility features that may be enabled by the platform.
   AccessibilityFeatures get accessibilityFeatures => configuration.accessibilityFeatures;
@@ -2187,10 +2190,11 @@ enum DartPerformanceMode {
 }
 
 class LastVsyncInfo {
-  const LastVsyncInfo({required this.vsyncTargetTime});
+  const LastVsyncInfo({required this.vsyncTargetTime, required this.vsyncTargetDateTime});
 
   final Duration vsyncTargetTime;
+  final DateTime vsyncTargetDateTime;
 
   @override
-  String toString() => 'LastVsyncInfo{vsyncTargetTime: $vsyncTargetTime}';
+  String toString() => 'LastVsyncInfo{vsyncTargetTime: $vsyncTargetTime, vsyncTargetDateTime: $vsyncTargetDateTime}';
 }
