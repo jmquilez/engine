@@ -176,6 +176,14 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
     secondary_callbacks_.clear();
   }
 
+  if (!callback && secondary_callbacks.empty()) {
+    // This means that the vsync waiter implementation fired a callback for a
+    // request we did not make. This is a paranoid check but we still want to
+    // make sure we catch misbehaving vsync implementations.
+    TRACE_EVENT_INSTANT0("flutter", "MismatchedFrameCallback");
+    return;
+  }
+
   // hack: schedule immediately to ensure [LastVsyncInfo] is updated every 16ms
   // in real implementation, will instead have real start/pause mechanism
   // instead of such blindly refresh
@@ -186,19 +194,13 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
   // but need hack for other platforms as well
   //  FML_DLOG(INFO) << "hi VsyncWaiter::FireCallback extra call AwaitVsync to "
   //                    "ensure every frame we see info";
+  // NOTE must be *after* checking empty and early return
+  //      for that, see #5835
   ScheduleSecondaryCallback(
       reinterpret_cast<uintptr_t>(&LastVsyncInfo::Instance()), [] {},
       // NOTE do NOT sanity check thread, since closure is empty and we only
       // want to trigger scheduling
       false);
-
-  if (!callback && secondary_callbacks.empty()) {
-    // This means that the vsync waiter implementation fired a callback for a
-    // request we did not make. This is a paranoid check but we still want to
-    // make sure we catch misbehaving vsync implementations.
-    TRACE_EVENT_INSTANT0("flutter", "MismatchedFrameCallback");
-    return;
-  }
 
   if (callback) {
     auto flow_identifier = fml::tracing::TraceNonce();
