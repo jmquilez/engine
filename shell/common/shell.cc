@@ -46,9 +46,8 @@ Dart_Handle PointerDataPacketStorage::ReadAllPendingStatic() {
 int64_t PointerDataPacketStorage::AddPending(const PointerDataPacket& packet) {
   std::scoped_lock state_lock(mutex_);
 
-  PointerDataPacket packet_cloned(packet.data());
   int64_t chosen_id = next_id_++;
-  pending_packets_[chosen_id] = packet_cloned;
+  pending_packets_.emplace(chosen_id, packet.data());
   return chosen_id;
 }
 
@@ -61,15 +60,15 @@ void PointerDataPacketStorage::RemovePending(int64_t id) {
 Dart_Handle PointerDataPacketStorage::ReadAllPending() {
   std::scoped_lock state_lock(mutex_);
 
-  std::vector<Dart_Handle> handles;
+  // quite slow, only for prototype, should optimize later
+  std::vector<uint8_t> total_buffer;
   for (auto const& [_, packet] : pending_packets_) {
-    const std::vector<uint8_t>& buffer = packet.data();
-    Dart_Handle data_handle =
-        tonic::DartByteData::Create(buffer.data(), buffer.size());
-    handles.push_back(data_handle);
+    const std::vector<uint8_t>& packet_buffer = packet.data();
+    total_buffer.insert(total_buffer.end(), packet_buffer.begin(),
+                        packet_buffer.end());
   }
 
-  return tonic::ToDart(handles);
+  return tonic::DartByteData::Create(total_buffer.data(), total_buffer.size());
 }
 
 constexpr char kSkiaChannel[] = "flutter/skia";
@@ -1020,9 +1019,9 @@ void Shell::OnPlatformViewDispatchPointerDataPacket(
   // NOTE ADD
   int64_t storage_id = PointerDataPacketStorage::Instance().AddPending(*packet);
 
-  task_runners_.GetUITaskRunner()->PostTask(
-      fml::MakeCopyable([engine = weak_engine_, packet = std::move(packet),
-                         flow_id = next_pointer_flow_id_]() mutable {
+  task_runners_.GetUITaskRunner()->PostTask(fml::MakeCopyable(
+      [engine = weak_engine_, packet = std::move(packet),
+       flow_id = next_pointer_flow_id_, storage_id = storage_id]() mutable {
         if (engine) {
           engine->DispatchPointerDataPacket(std::move(packet), flow_id);
         }
