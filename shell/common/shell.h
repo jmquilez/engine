@@ -50,11 +50,11 @@ class PointerDataPacketStorage {
   PointerDataPacketStorage() {}
 
   static PointerDataPacketStorage& Instance();
-  static Dart_Handle ReadAllPendingStatic();
+  static Dart_Handle ReadPendingAndClearStatic();
 
   int64_t AddPending(const PointerDataPacket& packet);
   void RemovePending(int64_t id);
-  Dart_Handle ReadAllPending();
+  Dart_Handle ReadPendingAndClear();
 
  private:
   std::mutex mutex_;

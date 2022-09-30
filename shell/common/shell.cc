@@ -39,8 +39,8 @@ PointerDataPacketStorage& PointerDataPacketStorage::Instance() {
   return instance;
 }
 
-Dart_Handle PointerDataPacketStorage::ReadAllPendingStatic() {
-  return PointerDataPacketStorage::Instance().ReadAllPending();
+Dart_Handle PointerDataPacketStorage::ReadPendingAndClearStatic() {
+  return PointerDataPacketStorage::Instance().ReadPendingAndClear();
 }
 
 int64_t PointerDataPacketStorage::AddPending(const PointerDataPacket& packet) {
@@ -57,16 +57,20 @@ void PointerDataPacketStorage::RemovePending(int64_t id) {
   pending_packets_.erase(id);
 }
 
-Dart_Handle PointerDataPacketStorage::ReadAllPending() {
+Dart_Handle PointerDataPacketStorage::ReadPendingAndClear() {
+  // should not lock for this long
   std::scoped_lock state_lock(mutex_);
 
-  // quite slow, only for prototype, should optimize later
+  // quite expensive copy/resize, only for prototype, should optimize later
   std::vector<uint8_t> total_buffer;
   for (auto const& [_, packet] : pending_packets_) {
     const std::vector<uint8_t>& packet_buffer = packet.data();
     total_buffer.insert(total_buffer.end(), packet_buffer.begin(),
                         packet_buffer.end());
   }
+
+  // clear
+  pending_packets_.clear();
 
   return tonic::DartByteData::Create(total_buffer.data(), total_buffer.size());
 }
