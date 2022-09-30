@@ -4,6 +4,7 @@
 
 #include "flutter/lib/ui/window/platform_configuration.h"
 
+#include <shell/common/shell.h>
 #include <cstring>
 
 #include "flutter/lib/ui/compositing/scene.h"
@@ -409,6 +410,11 @@ Dart_Handle PlatformConfigurationNativeApi::GetPersistentIsolateData() {
 void PlatformConfigurationNativeApi::ScheduleFrame() {
   UIDartState::ThrowIfUIOperationsProhibited();
   UIDartState::Current()->platform_configuration()->client()->ScheduleFrame();
+}
+
+Dart_Handle
+PlatformConfigurationNativeApi::PointerDataPacketStorageReadPendingAndClear() {
+  return PointerDataPacketStorage::ReadPendingAndClearStatic();
 }
 
 void PlatformConfigurationNativeApi::UpdateSemantics(SemanticsUpdate* update) {

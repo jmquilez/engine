@@ -737,7 +737,7 @@ class PlatformDispatcher {
   }
 
   // prototype, should not really name/place here
-  @FfiNative<Handle Function()>('PointerDataPacketStorage::ReadPendingAndClearStatic')
+  @FfiNative<Handle Function()>('PlatformConfigurationNativeApi::PointerDataPacketStorageReadPendingAndClear')
   external static ByteData _pointerDataPacketStorageReadPendingAndClearStatic();
 
   /// Additional accessibility features that may be enabled by the platform.

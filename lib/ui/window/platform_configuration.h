@@ -473,6 +473,8 @@ class PlatformConfigurationNativeApi {
 
   static void ScheduleFrame();
 
+  static Dart_Handle PointerDataPacketStorageReadPendingAndClear();
+
   static void Render(Scene* scene);
 
   static void UpdateSemantics(SemanticsUpdate* update);

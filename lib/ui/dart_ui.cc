@@ -4,7 +4,6 @@
 
 #include "flutter/lib/ui/dart_ui.h"
 
-#include <shell/common/shell.h>
 #include <shell/common/vsync_waiter.h>
 #include <mutex>
 #include <string_view>
@@ -94,7 +93,9 @@ typedef CanvasPath Path;
   V(PlatformConfigurationNativeApi::DefaultRouteName, 0)              \
   V(PlatformConfigurationNativeApi::ScheduleFrame, 0)                 \
   V(LastVsyncInfo::ReadToDart, 0)                                     \
-  V(PointerDataPacketStorage::ReadPendingAndClearStatic, 0)           \
+  V(PlatformConfigurationNativeApi::                                  \
+        PointerDataPacketStorageReadPendingAndClear,                  \
+    0)                                                                \
   V(PlatformConfigurationNativeApi::Render, 1)                        \
   V(PlatformConfigurationNativeApi::UpdateSemantics, 1)               \
   V(PlatformConfigurationNativeApi::SetNeedsReportTimings, 1)         \
