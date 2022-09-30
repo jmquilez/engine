@@ -50,16 +50,16 @@ class PointerDataPacketStorage {
   PointerDataPacketStorage() {}
 
   static PointerDataPacketStorage& Instance();
-  static void ClearStatic();
-  static Dart_Handle ReadAllStatic();
+  static Dart_Handle ReadAllPendingStatic();
 
-  void Add(const PointerDataPacket& packet);
-  void Clear();
-  Dart_Handle ReadAll();
+  int64_t AddPending(const PointerDataPacket& packet);
+  void RemovePending(int64_t id);
+  Dart_Handle ReadAllPending();
 
  private:
   std::mutex mutex_;
-  std::vector<PointerDataPacket> packets_;
+  int next_id_{0};
+  std::map<int64_t, PointerDataPacket> pending_packets_;
 
   FML_DISALLOW_COPY_ASSIGN_AND_MOVE(PointerDataPacketStorage);
 };

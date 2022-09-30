@@ -39,30 +39,30 @@ PointerDataPacketStorage& PointerDataPacketStorage::Instance() {
   return instance;
 }
 
-void PointerDataPacketStorage::ClearStatic() {
-  PointerDataPacketStorage::Instance().Clear();
+Dart_Handle PointerDataPacketStorage::ReadAllPendingStatic() {
+  return PointerDataPacketStorage::Instance().ReadAllPending();
 }
 
-Dart_Handle PointerDataPacketStorage::ReadAllStatic() {
-  return PointerDataPacketStorage::Instance().ReadAll();
-}
-
-void PointerDataPacketStorage::Add(const PointerDataPacket& packet) {
+int64_t PointerDataPacketStorage::AddPending(const PointerDataPacket& packet) {
   std::scoped_lock state_lock(mutex_);
+
   PointerDataPacket packet_cloned(packet.data());
-  packets_.push_back(packet_cloned);
+  int64_t chosen_id = next_id_++;
+  pending_packets_[chosen_id] = packet_cloned;
+  return chosen_id;
 }
 
-void PointerDataPacketStorage::Clear() {
+void PointerDataPacketStorage::RemovePending(int64_t id) {
   std::scoped_lock state_lock(mutex_);
-  packets_.clear();
+
+  pending_packets_.erase(id);
 }
 
-Dart_Handle PointerDataPacketStorage::ReadAll() {
+Dart_Handle PointerDataPacketStorage::ReadAllPending() {
   std::scoped_lock state_lock(mutex_);
 
   std::vector<Dart_Handle> handles;
-  for (const PointerDataPacket& packet : packets_) {
+  for (auto const& [_, packet] : pending_packets_) {
     const std::vector<uint8_t>& buffer = packet.data();
     Dart_Handle data_handle =
         tonic::DartByteData::Create(buffer.data(), buffer.size());
@@ -1018,7 +1018,7 @@ void Shell::OnPlatformViewDispatchPointerDataPacket(
   FML_DCHECK(task_runners_.GetPlatformTaskRunner()->RunsTasksOnCurrentThread());
 
   // NOTE ADD
-  PointerDataPacketStorage::Instance().Add(*packet);
+  int64_t storage_id = PointerDataPacketStorage::Instance().AddPending(*packet);
 
   task_runners_.GetUITaskRunner()->PostTask(
       fml::MakeCopyable([engine = weak_engine_, packet = std::move(packet),
@@ -1026,6 +1026,9 @@ void Shell::OnPlatformViewDispatchPointerDataPacket(
         if (engine) {
           engine->DispatchPointerDataPacket(std::move(packet), flow_id);
         }
+
+        // NOTE ADD
+        PointerDataPacketStorage::Instance().RemovePending(storage_id);
       }));
   next_pointer_flow_id_++;
 }

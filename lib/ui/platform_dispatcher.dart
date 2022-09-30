@@ -731,18 +731,14 @@ class PlatformDispatcher {
   @FfiNative<Handle Function()>('LastVsyncInfo::ReadToDart')
   external static List<int> _lastVsyncInfo();
 
-  static List<List<PointerEvent>> pointerDataPacketStorageReadAll() {
-    return TODO;
+  static List<List<PointerDataPacket>> pointerDataPacketStorageReadAll() {
+    final raw = _pointerDataPacketStorageReadAllPendingStatic();
+    return raw.map(_unpackPointerDataPacket).toList();
   }
 
-  static void pointerDataPacketStorageClear() =>
-    _pointerDataPacketStorageClearStatic();
-
   // prototype, should not really name/place here
-  @FfiNative<Handle Function()>('PointerDataPacketStorage::ReadAllStatic')
-  external static List<ByteData> _pointerDataPacketStorageReadAllStatic();
-  @FfiNative<void Function()>('PointerDataPacketStorage::ClearStatic')
-  external static void _pointerDataPacketStorageClearStatic();
+  @FfiNative<Handle Function()>('PointerDataPacketStorage::ReadAllPendingStatic')
+  external static List<ByteData> _pointerDataPacketStorageReadAllPendingStatic();
 
   /// Additional accessibility features that may be enabled by the platform.
   AccessibilityFeatures get accessibilityFeatures => configuration.accessibilityFeatures;
