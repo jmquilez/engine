@@ -64,6 +64,7 @@ typedef CanvasPath Path;
 // - Resolve the native function pointer associated with an @FfiNative function.
 //   If there is a mismatch between name or parameter count an @FfiNative is
 //   trying to resolve, an exception will be thrown.
+// clang-format off
 #define FFI_FUNCTION_LIST(V)                                          \
   /* Constructors */                                                  \
   V(Canvas::Create, 6)                                                \
@@ -93,9 +94,7 @@ typedef CanvasPath Path;
   V(PlatformConfigurationNativeApi::DefaultRouteName, 0)              \
   V(PlatformConfigurationNativeApi::ScheduleFrame, 0)                 \
   /*V(LastVsyncInfo::ReadToDart, 0)*/                                 \
-  V(PlatformConfigurationNativeApi::                                  \
-        PointerDataPacketStorageReadPendingAndClear,                  \
-    0)                                                                \
+  V(PlatformConfigurationNativeApi::PointerDataPacketStorageReadPendingAndClear, 0) \
   V(PlatformConfigurationNativeApi::Render, 1)                        \
   V(PlatformConfigurationNativeApi::UpdateSemantics, 1)               \
   V(PlatformConfigurationNativeApi::SetNeedsReportTimings, 1)         \
@@ -115,6 +114,7 @@ typedef CanvasPath Path;
   V(DartRuntimeHooks::GetCallbackFromHandle, 1)                       \
   V(DartPluginRegistrant_EnsureInitialized, 0)                        \
   V(Vertices::init, 6)
+// clang-format on
 
 // List of native instance methods used as @FfiNative functions.
 // Items are tuples of ('class_name', 'method_name', 'parameter_count'), where:
