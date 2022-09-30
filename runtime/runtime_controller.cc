@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "flutter/runtime/runtime_controller.h"
+#include <shell/common/shell.h>
 
 #include "flutter/fml/message_loop.h"
 #include "flutter/fml/trace_event.h"
@@ -276,6 +277,10 @@ std::string RuntimeController::DefaultRouteName() {
 // |PlatformConfigurationClient|
 void RuntimeController::ScheduleFrame() {
   client_.ScheduleFrame();
+}
+
+Dart_Handle RuntimeController::PointerDataPacketStorageReadPendingAndClear() {
+  return client_.PointerDataPacketStorageReadPendingAndClear();
 }
 
 // |PlatformConfigurationClient|

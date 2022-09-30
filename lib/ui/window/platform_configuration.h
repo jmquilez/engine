@@ -64,6 +64,8 @@ class PlatformConfigurationClient {
   ///
   virtual void ScheduleFrame() = 0;
 
+  virtual Dart_Handle PointerDataPacketStorageReadPendingAndClear() = 0;
+
   //--------------------------------------------------------------------------
   /// @brief      Updates the client's rendering on the GPU with the newly
   ///             provided Scene.

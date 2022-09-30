@@ -439,6 +439,10 @@ void Engine::ScheduleFrame(bool regenerate_layer_tree) {
   animator_->RequestFrame(regenerate_layer_tree);
 }
 
+Dart_Handle Engine::PointerDataPacketStorageReadPendingAndClear() {
+  return PointerDataPacketStorage::ReadPendingAndClearStatic();
+}
+
 void Engine::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
   if (!layer_tree) {
     return;

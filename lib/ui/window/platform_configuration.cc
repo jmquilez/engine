@@ -414,7 +414,11 @@ void PlatformConfigurationNativeApi::ScheduleFrame() {
 
 Dart_Handle
 PlatformConfigurationNativeApi::PointerDataPacketStorageReadPendingAndClear() {
-  return PointerDataPacketStorage::ReadPendingAndClearStatic();
+  UIDartState::ThrowIfUIOperationsProhibited();
+  return UIDartState::Current()
+      ->platform_configuration()
+      ->client()
+      ->PointerDataPacketStorageReadPendingAndClear();
 }
 
 void PlatformConfigurationNativeApi::UpdateSemantics(SemanticsUpdate* update) {
