@@ -34,6 +34,44 @@
 
 namespace flutter {
 
+PointerDataPacketStorage& PointerDataPacketStorage::Instance() {
+  static PointerDataPacketStorage instance;
+  return instance;
+}
+
+void PointerDataPacketStorage::ClearStatic() {
+  PointerDataPacketStorage::Instance().Clear();
+}
+
+Dart_Handle PointerDataPacketStorage::ReadAllStatic() {
+  return PointerDataPacketStorage::Instance().ReadAll();
+}
+
+void PointerDataPacketStorage::Add(const PointerDataPacket& packet) {
+  std::scoped_lock state_lock(mutex_);
+  PointerDataPacket packet_cloned(packet.data());
+  packets_.push_back(packet_cloned);
+}
+
+void PointerDataPacketStorage::Clear() {
+  std::scoped_lock state_lock(mutex_);
+  packets_.clear();
+}
+
+Dart_Handle PointerDataPacketStorage::ReadAll() {
+  std::scoped_lock state_lock(mutex_);
+
+  std::vector<Dart_Handle> handles;
+  for (const PointerDataPacket& packet : packets_) {
+    const std::vector<uint8_t>& buffer = packet.data();
+    Dart_Handle data_handle =
+        tonic::DartByteData::Create(buffer.data(), buffer.size());
+    handles.push_back(data_handle);
+  }
+
+  return tonic::ToDart(handles);
+}
+
 constexpr char kSkiaChannel[] = "flutter/skia";
 constexpr char kSystemChannel[] = "flutter/system";
 constexpr char kTypeKey[] = "type";
@@ -978,6 +1016,10 @@ void Shell::OnPlatformViewDispatchPointerDataPacket(
   TRACE_FLOW_BEGIN("flutter", "PointerEvent", next_pointer_flow_id_);
   FML_DCHECK(is_setup_);
   FML_DCHECK(task_runners_.GetPlatformTaskRunner()->RunsTasksOnCurrentThread());
+
+  // NOTE ADD
+  PointerDataPacketStorage::Instance().Add(*packet);
+
   task_runners_.GetUITaskRunner()->PostTask(
       fml::MakeCopyable([engine = weak_engine_, packet = std::move(packet),
                          flow_id = next_pointer_flow_id_]() mutable {

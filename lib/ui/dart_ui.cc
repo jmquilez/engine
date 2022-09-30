@@ -93,6 +93,8 @@ typedef CanvasPath Path;
   V(PlatformConfigurationNativeApi::DefaultRouteName, 0)              \
   V(PlatformConfigurationNativeApi::ScheduleFrame, 0)                 \
   V(LastVsyncInfo::ReadToDart, 0)                                     \
+  V(PointerDataPacketStorage::ReadAllStatic, 0)                       \
+  V(PointerDataPacketStorage::ClearStatic, 0)                         \
   V(PlatformConfigurationNativeApi::Render, 1)                        \
   V(PlatformConfigurationNativeApi::UpdateSemantics, 1)               \
   V(PlatformConfigurationNativeApi::SetNeedsReportTimings, 1)         \
