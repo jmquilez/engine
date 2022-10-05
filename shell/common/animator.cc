@@ -5,6 +5,7 @@
 #include "flutter/shell/common/animator.h"
 
 #include "flutter/flow/frame_timings.h"
+#include "flutter/fml/backtrace.h"
 #include "flutter/fml/time/time_point.h"
 #include "flutter/fml/trace_event.h"
 #include "third_party/dart/runtime/include/dart_tools_api.h"
@@ -79,6 +80,7 @@ void Animator::BeginFrame(
                          frame_request_number_);
   frame_request_number_++;
 
+  FML_DLOG(ERROR) << "hi Animator::BeginFrame set frame_timings_recorder_";
   frame_timings_recorder_ = std::move(frame_timings_recorder);
   frame_timings_recorder_->RecordBuildStart(fml::TimePoint::Now());
 
@@ -170,6 +172,7 @@ void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
   last_layer_tree_size_ = layer_tree->frame_size();
 
   if (!frame_timings_recorder_) {
+    FML_DLOG(ERROR) << "hi Animator::Render set frame_timings_recorder_";
     // Framework can directly call render with a built scene.
     frame_timings_recorder_ = std::make_unique<FrameTimingsRecorder>();
     const fml::TimePoint placeholder_time = fml::TimePoint::Now();
@@ -198,6 +201,7 @@ void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
   FML_DLOG(INFO) << "hi Animator::Render call producer_continuation_.Complete"
                  << " produce producer_continuation_="
                  << static_cast<bool>(producer_continuation_);
+  FML_DLOG(ERROR) << "hi Animator::Render remove frame_timings_recorder_";
   auto layer_tree_item = std::make_unique<LayerTreeItem>(
       std::move(layer_tree), std::move(frame_timings_recorder_));
   // Commit the pending continuation.
@@ -305,7 +309,8 @@ void Animator::AwaitVSync() {
               ? frame_timings_recorder_->GetVsyncTargetTime()
                     .ToEpochDelta()
                     .ToMicroseconds()
-              : -1);
+              : -1)
+      << " backtrace=" << fml::BacktraceHere();
 
   // NotRespectVsync, see #5982
   if (curr_vsync_has_already_called_begin_frame) {
