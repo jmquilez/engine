@@ -50,6 +50,7 @@ class MockRuntimeDelegate : public RuntimeDelegate {
  public:
   MOCK_METHOD0(DefaultRouteName, std::string());
   MOCK_METHOD1(ScheduleFrame, void(bool));
+  MOCK_METHOD0(LastVsyncInfo, Dart_Handle());
   MOCK_METHOD0(PointerDataPacketStorageReadPendingAndClear, Dart_Handle());
   MOCK_METHOD1(Render, void(std::shared_ptr<flutter::LayerTree>));
   MOCK_METHOD2(UpdateSemantics,

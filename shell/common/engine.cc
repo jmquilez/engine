@@ -439,6 +439,10 @@ void Engine::ScheduleFrame(bool regenerate_layer_tree) {
   animator_->RequestFrame(regenerate_layer_tree);
 }
 
+Dart_Handle Engine::LastVsyncInfo() {
+  return LastVsyncInfo::ReadToDart();
+}
+
 Dart_Handle Engine::PointerDataPacketStorageReadPendingAndClear() {
   return PointerDataPacketStorage::ReadPendingAndClearStatic();
 }

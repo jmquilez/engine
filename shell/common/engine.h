@@ -756,6 +756,9 @@ class Engine final : public RuntimeDelegate, PointerDataDispatcher::Delegate {
   void ScheduleFrame(bool regenerate_layer_tree) override;
 
   // |RuntimeDelegate|
+  Dart_Handle LastVsyncInfo() override;
+
+  // |RuntimeDelegate|
   Dart_Handle PointerDataPacketStorageReadPendingAndClear() override;
 
   /// Schedule a frame with the default parameter of regenerating the layer

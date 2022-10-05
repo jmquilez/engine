@@ -64,6 +64,8 @@ class PlatformConfigurationClient {
   ///
   virtual void ScheduleFrame() = 0;
 
+  virtual Dart_Handle LastVsyncInfo() = 0;
+
   virtual Dart_Handle PointerDataPacketStorageReadPendingAndClear() = 0;
 
   //--------------------------------------------------------------------------
@@ -474,6 +476,8 @@ class PlatformConfigurationNativeApi {
   static std::string DefaultRouteName();
 
   static void ScheduleFrame();
+
+  static Dart_Handle LastVsyncInfo();
 
   static Dart_Handle PointerDataPacketStorageReadPendingAndClear();
 
