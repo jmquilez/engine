@@ -212,6 +212,10 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
       false);
   */
 
+  // for debug #5988
+  fml::tracing::TraceEventAsyncComplete("flutter", "VsyncStartToTarget",
+                                        frame_start_time, frame_target_time);
+
   if (callback) {
     auto flow_identifier = fml::tracing::TraceNonce();
     if (pause_secondary_tasks) {
