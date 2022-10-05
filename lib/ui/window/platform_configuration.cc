@@ -412,14 +412,6 @@ void PlatformConfigurationNativeApi::ScheduleFrame() {
   UIDartState::Current()->platform_configuration()->client()->ScheduleFrame();
 }
 
-Dart_Handle PlatformConfigurationNativeApi::LastVsyncInfo() {
-  UIDartState::ThrowIfUIOperationsProhibited();
-  return UIDartState::Current()
-      ->platform_configuration()
-      ->client()
-      ->LastVsyncInfo();
-}
-
 Dart_Handle
 PlatformConfigurationNativeApi::PointerDataPacketStorageReadPendingAndClear() {
   UIDartState::ThrowIfUIOperationsProhibited();

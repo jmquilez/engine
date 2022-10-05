@@ -71,6 +71,10 @@ LastVsyncInfo& LastVsyncInfo::Instance() {
 }
 
 Dart_Handle LastVsyncInfo::ReadToDart() {
+  // https://github.com/fzyzcjy/flutter_smooth/issues/38#issuecomment-1262271851
+  FML_LOG(ERROR) << "LastVsyncInfo::ReadToDart is temporarily disabled!";
+  abort();
+
   LastVsyncInfo& instance = Instance();
   auto vsync_target_time = instance.GetVsyncTargetTime();
   auto diff_date_time_time_point = instance.GetDiffDateTimeTimePoint();
@@ -186,6 +190,9 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
   // #5835
   LastVsyncInfo::Instance().RecordVsync(frame_start_time, frame_target_time);
 
+  // temporarily disable this
+  // https://github.com/fzyzcjy/flutter_smooth/issues/38#issuecomment-1262271851
+  /*
   // hack: schedule immediately to ensure [LastVsyncInfo] is updated every 16ms
   // in real implementation, will instead have real start/pause mechanism
   // instead of such blindly refresh
@@ -198,23 +205,12 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
   //                    "ensure every frame we see info";
   // NOTE must be *after* checking empty and early return
   //      for that, see #5835
-  task_runners_.GetPlatformTaskRunner()->PostDelayedTask(
-      // hack: should not capture [this]
-      [this]() {
-        ScheduleSecondaryCallback(
-            reinterpret_cast<uintptr_t>(&LastVsyncInfo::Instance()), [] {},
-            // NOTE do NOT sanity check thread, since closure is empty and we
-            // only want to trigger scheduling
-            false);
-      },
-      // NOTE try to use a *delayed* task, because if immediately call
-      //      [ScheduleSecondaryCallback], have seen one vsync fire *multi*
-      //      callbacks which is totally wrong
-      fml::TimeDelta::FromMilliseconds(1));
-
-  // for debug #5988
-  fml::tracing::TraceEventAsyncComplete("flutter", "VsyncStartToTarget",
-                                        frame_start_time, frame_target_time);
+  ScheduleSecondaryCallback(
+      reinterpret_cast<uintptr_t>(&LastVsyncInfo::Instance()), [] {},
+      // NOTE do NOT sanity check thread, since closure is empty and we only
+      // want to trigger scheduling
+      false);
+  */
 
   if (callback) {
     auto flow_identifier = fml::tracing::TraceNonce();

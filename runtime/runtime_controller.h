@@ -604,8 +604,6 @@ class RuntimeController : public PlatformConfigurationClient {
   // |PlatformConfigurationClient|
   void ScheduleFrame() override;
 
-  Dart_Handle LastVsyncInfo() override;
-
   Dart_Handle PointerDataPacketStorageReadPendingAndClear() override;
 
   // |PlatformConfigurationClient|

@@ -720,16 +720,17 @@ class PlatformDispatcher {
   external static void _scheduleFrame();
 
   LastVsyncInfo lastVsyncInfo() {
-    final List<int> raw = _lastVsyncInfo();
-    return LastVsyncInfo(
-      vsyncTargetTime: Duration(microseconds: raw[0]),
-      diffDateTimeTimePoint: raw[1],
-    );
+    // final List<int> raw = _lastVsyncInfo();
+    // return LastVsyncInfo(
+    //   vsyncTargetTime: Duration(microseconds: raw[0]),
+    //   diffDateTimeTimePoint: raw[1],
+    // );
+    throw Exception('temporarily removed');
   }
 
-  // prototype, should not really name/place here
-  @FfiNative<Handle Function()>('PlatformConfigurationNativeApi::LastVsyncInfo')
-  external static List<int> _lastVsyncInfo();
+  // // prototype, should not really name/place here
+  // @FfiNative<Handle Function()>('LastVsyncInfo::ReadToDart')
+  // external static List<int> _lastVsyncInfo();
 
   static PointerDataPacket pointerDataPacketStorageReadPendingAndClear() {
     final raw = _pointerDataPacketStorageReadPendingAndClearStatic();

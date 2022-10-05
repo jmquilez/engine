@@ -25,8 +25,6 @@ class RuntimeDelegate {
 
   virtual void ScheduleFrame(bool regenerate_layer_tree = true) = 0;
 
-  virtual Dart_Handle LastVsyncInfo() = 0;
-
   virtual Dart_Handle PointerDataPacketStorageReadPendingAndClear() = 0;
 
   virtual void Render(std::shared_ptr<flutter::LayerTree> layer_tree) = 0;

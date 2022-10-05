@@ -5,7 +5,6 @@
 #include "flutter/shell/common/animator.h"
 
 #include "flutter/flow/frame_timings.h"
-#include "flutter/fml/backtrace.h"
 #include "flutter/fml/time/time_point.h"
 #include "flutter/fml/trace_event.h"
 #include "third_party/dart/runtime/include/dart_tools_api.h"
@@ -80,7 +79,6 @@ void Animator::BeginFrame(
                          frame_request_number_);
   frame_request_number_++;
 
-  FML_DLOG(INFO) << "hi Animator::BeginFrame set frame_timings_recorder_";
   frame_timings_recorder_ = std::move(frame_timings_recorder);
   frame_timings_recorder_->RecordBuildStart(fml::TimePoint::Now());
 
@@ -172,7 +170,6 @@ void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
   last_layer_tree_size_ = layer_tree->frame_size();
 
   if (!frame_timings_recorder_) {
-    FML_DLOG(INFO) << "hi Animator::Render set frame_timings_recorder_";
     // Framework can directly call render with a built scene.
     frame_timings_recorder_ = std::make_unique<FrameTimingsRecorder>();
     const fml::TimePoint placeholder_time = fml::TimePoint::Now();
@@ -201,7 +198,6 @@ void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
   FML_DLOG(INFO) << "hi Animator::Render call producer_continuation_.Complete"
                  << " produce producer_continuation_="
                  << static_cast<bool>(producer_continuation_);
-  FML_DLOG(INFO) << "hi Animator::Render remove frame_timings_recorder_";
   auto layer_tree_item = std::make_unique<LayerTreeItem>(
       std::move(layer_tree), std::move(frame_timings_recorder_));
   // Commit the pending continuation.
@@ -290,62 +286,25 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
 
 void Animator::AwaitVSync() {
   FML_DLOG(INFO) << "hi Animator::AwaitVSync start";
-
-  // #5982
-  const LastVsyncInfo& lastVsyncInfo = LastVsyncInfo::Instance();
-  // to do: use one lock, currently two reads use two lockings.
-  auto frame_start_time = lastVsyncInfo.GetVsyncStartTime();
-  auto frame_target_time = lastVsyncInfo.GetVsyncTargetTime();
-
-  bool curr_vsync_has_already_called_begin_frame =
-      frame_timings_recorder_ &&
-      frame_timings_recorder_->GetVsyncTargetTime() == frame_target_time;
-  FML_DLOG(INFO)
-      << "hi Animator::AwaitVSync curr_vsync_has_already_called_begin_frame="
-      << curr_vsync_has_already_called_begin_frame << " frame_target_time="
-      << frame_target_time.ToEpochDelta().ToMicroseconds()
-      << " frame_timings_recorder_->GetVsyncTargetTime="
-      << (frame_timings_recorder_
-              ? frame_timings_recorder_->GetVsyncTargetTime()
-                    .ToEpochDelta()
-                    .ToMicroseconds()
-              : -1)
-      << " backtrace=" << fml::BacktraceHere();
-
-  // NotRespectVsync, see #5982
-  if (curr_vsync_has_already_called_begin_frame) {
-    waiter_
-        ->AsyncWaitForVsync(
-            [self = weak_factory_.GetWeakPtr()](
-                std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
-              FML_DLOG(INFO)
-                  << "hi Animator::AwaitVSync AsyncWaitForVsync callback start";
-              if (self) {
-                if (self->CanReuseLastLayerTree()) {
-                  FML_DLOG(INFO) << "hi Animator::AwaitVSync AsyncWaitForVsync "
-                                    "callback call DrawLastLayerTree";
-                  self->DrawLastLayerTree(std::move(frame_timings_recorder));
-                } else {
-                  FML_DLOG(INFO) << "hi Animator::AwaitVSync AsyncWaitForVsync "
-                                    "callback call BeginFrame";
-                  self->BeginFrame(std::move(frame_timings_recorder));
-                }
-              }
-              FML_DLOG(INFO)
-                  << "hi Animator::AwaitVSync AsyncWaitForVsync callback end";
-            });
-  } else {
-    FML_DLOG(INFO) << "hi Animator::AwaitVSync directly call BeginFrame";
-
-    // ref: vsync_waiter.cc
-    std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder =
-        std::make_unique<FrameTimingsRecorder>();
-    frame_timings_recorder->RecordVsync(frame_start_time, frame_target_time);
-
-    // hack: not consider `CanReuseLastLayerTree` yet
-    BeginFrame(std::move(frame_timings_recorder));
-  }
-
+  waiter_->AsyncWaitForVsync(
+      [self = weak_factory_.GetWeakPtr()](
+          std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
+        FML_DLOG(INFO)
+            << "hi Animator::AwaitVSync AsyncWaitForVsync callback start";
+        if (self) {
+          if (self->CanReuseLastLayerTree()) {
+            FML_DLOG(INFO) << "hi Animator::AwaitVSync AsyncWaitForVsync "
+                              "callback call DrawLastLayerTree";
+            self->DrawLastLayerTree(std::move(frame_timings_recorder));
+          } else {
+            FML_DLOG(INFO) << "hi Animator::AwaitVSync AsyncWaitForVsync "
+                              "callback call BeginFrame";
+            self->BeginFrame(std::move(frame_timings_recorder));
+          }
+        }
+        FML_DLOG(INFO)
+            << "hi Animator::AwaitVSync AsyncWaitForVsync callback end";
+      });
   if (has_rendered_) {
     delegate_.OnAnimatorNotifyIdle(dart_frame_deadline_);
   }

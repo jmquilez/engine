@@ -279,10 +279,6 @@ void RuntimeController::ScheduleFrame() {
   client_.ScheduleFrame();
 }
 
-Dart_Handle RuntimeController::LastVsyncInfo() {
-  return client_.LastVsyncInfo();
-}
-
 Dart_Handle RuntimeController::PointerDataPacketStorageReadPendingAndClear() {
   return client_.PointerDataPacketStorageReadPendingAndClear();
 }
