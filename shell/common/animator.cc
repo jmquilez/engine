@@ -294,6 +294,7 @@ void Animator::AwaitVSync() {
   auto frame_target_time = lastVsyncInfo.GetVsyncTargetTime();
 
   bool curr_vsync_has_already_called_begin_frame =
+      frame_timings_recorder_ &&
       frame_timings_recorder_->GetVsyncTargetTime() == frame_target_time;
   FML_DLOG(INFO)
       << "hi Animator::AwaitVSync curr_vsync_has_already_called_begin_frame="
