@@ -198,11 +198,19 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
   //                    "ensure every frame we see info";
   // NOTE must be *after* checking empty and early return
   //      for that, see #5835
-  ScheduleSecondaryCallback(
-      reinterpret_cast<uintptr_t>(&LastVsyncInfo::Instance()), [] {},
-      // NOTE do NOT sanity check thread, since closure is empty and we only
-      // want to trigger scheduling
-      false);
+  task_runners_.GetPlatformTaskRunner()->PostDelayedTask(
+      // hack: should not capture [this]
+      [this]() {
+        ScheduleSecondaryCallback(
+            reinterpret_cast<uintptr_t>(&LastVsyncInfo::Instance()), [] {},
+            // NOTE do NOT sanity check thread, since closure is empty and we
+            // only want to trigger scheduling
+            false);
+      },
+      // NOTE try to use a *delayed* task, because if immediately call
+      //      [ScheduleSecondaryCallback], have seen one vsync fire *multi*
+      //      callbacks which is totally wrong
+      fml::TimeDelta::FromMilliseconds(1));
 
   if (callback) {
     auto flow_identifier = fml::tracing::TraceNonce();
