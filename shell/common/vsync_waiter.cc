@@ -71,10 +71,6 @@ LastVsyncInfo& LastVsyncInfo::Instance() {
 }
 
 Dart_Handle LastVsyncInfo::ReadToDart() {
-  // https://github.com/fzyzcjy/flutter_smooth/issues/38#issuecomment-1262271851
-  FML_LOG(ERROR) << "LastVsyncInfo::ReadToDart is temporarily disabled!";
-  abort();
-
   LastVsyncInfo& instance = Instance();
   auto vsync_target_time = instance.GetVsyncTargetTime();
   auto diff_date_time_time_point = instance.GetDiffDateTimeTimePoint();
@@ -190,9 +186,6 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
   // #5835
   LastVsyncInfo::Instance().RecordVsync(frame_start_time, frame_target_time);
 
-  // temporarily disable this
-  // https://github.com/fzyzcjy/flutter_smooth/issues/38#issuecomment-1262271851
-  /*
   // hack: schedule immediately to ensure [LastVsyncInfo] is updated every 16ms
   // in real implementation, will instead have real start/pause mechanism
   // instead of such blindly refresh
@@ -210,7 +203,6 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
       // NOTE do NOT sanity check thread, since closure is empty and we only
       // want to trigger scheduling
       false);
-  */
 
   if (callback) {
     auto flow_identifier = fml::tracing::TraceNonce();
