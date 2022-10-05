@@ -296,9 +296,16 @@ void Animator::AwaitVSync() {
   bool curr_vsync_has_already_called_begin_frame =
       frame_timings_recorder_ &&
       frame_timings_recorder_->GetVsyncTargetTime() == frame_target_time;
-  FML_DLOG(INFO)
+  FML_DLOG(ERROR)
       << "hi Animator::AwaitVSync curr_vsync_has_already_called_begin_frame="
-      << curr_vsync_has_already_called_begin_frame;
+      << curr_vsync_has_already_called_begin_frame << " frame_target_time="
+      << frame_target_time.ToEpochDelta().ToMicroseconds()
+      << " frame_timings_recorder_->GetVsyncTargetTime="
+      << (frame_timings_recorder_
+              ? frame_timings_recorder_->GetVsyncTargetTime()
+                    .ToEpochDelta()
+                    .ToMicroseconds()
+              : -1);
 
   // NotRespectVsync, see #5982
   if (curr_vsync_has_already_called_begin_frame) {
