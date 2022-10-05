@@ -286,25 +286,53 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
 
 void Animator::AwaitVSync() {
   FML_DLOG(INFO) << "hi Animator::AwaitVSync start";
-  waiter_->AsyncWaitForVsync(
-      [self = weak_factory_.GetWeakPtr()](
-          std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
-        FML_DLOG(INFO)
-            << "hi Animator::AwaitVSync AsyncWaitForVsync callback start";
-        if (self) {
-          if (self->CanReuseLastLayerTree()) {
-            FML_DLOG(INFO) << "hi Animator::AwaitVSync AsyncWaitForVsync "
-                              "callback call DrawLastLayerTree";
-            self->DrawLastLayerTree(std::move(frame_timings_recorder));
-          } else {
-            FML_DLOG(INFO) << "hi Animator::AwaitVSync AsyncWaitForVsync "
-                              "callback call BeginFrame";
-            self->BeginFrame(std::move(frame_timings_recorder));
-          }
-        }
-        FML_DLOG(INFO)
-            << "hi Animator::AwaitVSync AsyncWaitForVsync callback end";
-      });
+
+  // #5982
+  const LastVsyncInfo& lastVsyncInfo = LastVsyncInfo::Instance();
+  // to do: use one lock, currently two reads use two lockings.
+  auto frame_start_time = lastVsyncInfo.GetVsyncStartTime();
+  auto frame_target_time = lastVsyncInfo.GetVsyncTargetTime();
+
+  bool curr_vsync_has_already_called_begin_frame =
+      frame_timings_recorder_->GetVsyncTargetTime() == frame_target_time;
+  FML_DLOG(INFO)
+      << "hi Animator::AwaitVSync curr_vsync_has_already_called_begin_frame="
+      << curr_vsync_has_already_called_begin_frame;
+
+  // NotRespectVsync, see #5982
+  if (curr_vsync_has_already_called_begin_frame) {
+    waiter_
+        ->AsyncWaitForVsync(
+            [self = weak_factory_.GetWeakPtr()](
+                std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
+              FML_DLOG(INFO)
+                  << "hi Animator::AwaitVSync AsyncWaitForVsync callback start";
+              if (self) {
+                if (self->CanReuseLastLayerTree()) {
+                  FML_DLOG(INFO) << "hi Animator::AwaitVSync AsyncWaitForVsync "
+                                    "callback call DrawLastLayerTree";
+                  self->DrawLastLayerTree(std::move(frame_timings_recorder));
+                } else {
+                  FML_DLOG(INFO) << "hi Animator::AwaitVSync AsyncWaitForVsync "
+                                    "callback call BeginFrame";
+                  self->BeginFrame(std::move(frame_timings_recorder));
+                }
+              }
+              FML_DLOG(INFO)
+                  << "hi Animator::AwaitVSync AsyncWaitForVsync callback end";
+            });
+  } else {
+    FML_DLOG(INFO) << "hi Animator::AwaitVSync directly call BeginFrame";
+
+    // ref: vsync_waiter.cc
+    std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder =
+        std::make_unique<FrameTimingsRecorder>();
+    frame_timings_recorder->RecordVsync(frame_start_time, frame_target_time);
+
+    // hack: not consider `CanReuseLastLayerTree` yet
+    BeginFrame(std::move(frame_timings_recorder));
+  }
+
   if (has_rendered_) {
     delegate_.OnAnimatorNotifyIdle(dart_frame_deadline_);
   }
