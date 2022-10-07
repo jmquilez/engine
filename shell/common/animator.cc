@@ -113,15 +113,19 @@ void Animator::BeginFrame(
       // full because the consumer is being too slow. Try again at the next
       // frame interval.
       TRACE_EVENT0("flutter", "PipelineFull");
-      RequestFrame();
-      FML_DLOG(INFO) << "hi Animator::BeginFrame return since pipelinefull";
-      return;
+
+      // NOTE MODIFIED allow continue running even if pipeline full #6042
+      //      RequestFrame();
+      //      FML_DLOG(INFO) << "hi Animator::BeginFrame return since
+      //      pipelinefull"; return;
     }
   }
 
-  // We have acquired a valid continuation from the pipeline and are ready
-  // to service potential frame.
-  FML_DCHECK(producer_continuation_);
+  // NOTE MODIFIED allow continue running even if pipeline full #6042
+  //  // We have acquired a valid continuation from the pipeline and are ready
+  //  // to service potential frame.
+  //  FML_DCHECK(producer_continuation_);
+
   fml::tracing::TraceEventAsyncComplete(
       "flutter", "VsyncSchedulingOverhead",
       frame_timings_recorder_->GetVsyncStartTime(),
