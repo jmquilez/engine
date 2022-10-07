@@ -213,8 +213,20 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
   */
 
   // for debug #5988
-  fml::tracing::TraceEventAsyncComplete("flutter", "VsyncStartToTarget",
-                                        frame_start_time, frame_target_time);
+  // use the name "VSYNC" since #6049
+  fml::tracing::TraceEventAsyncComplete("flutter", "VSYNC", frame_start_time,
+                                        frame_target_time);
+  if (last_timeline_report_vsync_target_time_.has_value()) {
+    fml::TimeDelta rough_frame_duration = frame_target_time - frame_start_time;
+    for (fml::TimePoint t = frame_target_time - rough_frame_duration;
+         t > last_timeline_report_vsync_target_time_.value() +
+                 fml::TimeDelta::FromMilliseconds(1);
+         t = t - rough_frame_duration) {
+      fml::tracing::TraceEventAsyncComplete("flutter", "VSYNC",
+                                            t - rough_frame_duration, t);
+    }
+  }
+  last_timeline_report_vsync_target_time_ = frame_target_time;
 
   if (callback) {
     auto flow_identifier = fml::tracing::TraceNonce();
