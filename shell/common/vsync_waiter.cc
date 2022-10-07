@@ -238,7 +238,9 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
          t > last_timeline_report_vsync_target_time_.value() +
                  fml::TimeDelta::FromMilliseconds(1);
          t = t - rough_frame_duration) {
-      TracePseudoVsync(t - rough_frame_duration, t);
+      TracePseudoVsync(t - rough_frame_duration,
+                       // -1us to avoid multi events be treated as one (?)
+                       t - fml::TimeDelta::FromMicroseconds(1));
     }
   }
   last_timeline_report_vsync_target_time_ = frame_target_time;
