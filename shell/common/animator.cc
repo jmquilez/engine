@@ -303,8 +303,6 @@ void Animator::AwaitVSync(uint64_t flow_id) {
   waiter_->AsyncWaitForVsync(
       [self = weak_factory_.GetWeakPtr(),
        flow_id](std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
-        TRACE_EVENT0("flutter",
-                     "Animator::going-tp-BeginFrame");  // NOTE MODIFIED add
         TRACE_FLOW_END("flutter", "RequestFrame", flow_id);
 
         FML_DLOG(INFO)
