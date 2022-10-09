@@ -251,6 +251,8 @@ void Animator::DrawLastLayerTree(
 }
 
 void Animator::RequestFrame(bool regenerate_layer_tree) {
+  TRACE_EVENT0("flutter", "Animator::RequestFrame");  // NOTE MODIFIED add
+
   FML_DLOG(INFO) << "hi Animator::RequestFrame start";
   if (regenerate_layer_tree) {
     regenerate_layer_tree_ = true;
@@ -289,6 +291,8 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
 }
 
 void Animator::AwaitVSync() {
+  TRACE_EVENT0("flutter", "Animator::AwaitVSync");  // NOTE MODIFIED add
+
   FML_DLOG(INFO) << "hi Animator::AwaitVSync start";
   waiter_->AsyncWaitForVsync(
       [self = weak_factory_.GetWeakPtr()](
