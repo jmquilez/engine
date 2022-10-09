@@ -250,8 +250,12 @@ void Animator::DrawLastLayerTree(
   delegate_.OnAnimatorDrawLastLayerTree(std::move(frame_timings_recorder));
 }
 
+static int next_request_frame_flow_id_ = 100;
+
 void Animator::RequestFrame(bool regenerate_layer_tree) {
   TRACE_EVENT0("flutter", "Animator::RequestFrame");  // NOTE MODIFIED add
+  auto request_frame_flow_id = next_request_frame_flow_id_++;
+  TRACE_FLOW_BEGIN("flutter", "RequestFrame", request_frame_flow_id);
 
   FML_DLOG(INFO) << "hi Animator::RequestFrame start";
   if (regenerate_layer_tree) {
@@ -274,7 +278,8 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
 
   task_runners_.GetUITaskRunner()->PostTask(
       [self = weak_factory_.GetWeakPtr(),
-       frame_request_number = frame_request_number_]() {
+       frame_request_number = frame_request_number_,
+       flow_id = request_frame_flow_id]() {
         FML_DLOG(INFO)
             << "hi Animator::RequestFrame UITaskRunner PostTask callback start";
         if (!self) {
@@ -282,7 +287,7 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
         }
         TRACE_EVENT_ASYNC_BEGIN0("flutter", "Frame Request Pending",
                                  frame_request_number);
-        self->AwaitVSync();
+        self->AwaitVSync(flow_id);
         FML_DLOG(INFO)
             << "hi Animator::RequestFrame UITaskRunner PostTask callback end";
       });
@@ -290,13 +295,18 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
   FML_DLOG(INFO) << "hi Animator::RequestFrame end";
 }
 
-void Animator::AwaitVSync() {
+void Animator::AwaitVSync(uint64_t flow_id) {
   TRACE_EVENT0("flutter", "Animator::AwaitVSync");  // NOTE MODIFIED add
+  TRACE_FLOW_STEP("flutter", "RequestFrame", flow_id);
 
   FML_DLOG(INFO) << "hi Animator::AwaitVSync start";
   waiter_->AsyncWaitForVsync(
-      [self = weak_factory_.GetWeakPtr()](
-          std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
+      [self = weak_factory_.GetWeakPtr(),
+       flow_id](std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
+        TRACE_EVENT0("flutter",
+                     "Animator::going-tp-BeginFrame");  // NOTE MODIFIED add
+        TRACE_FLOW_END("flutter", "RequestFrame", flow_id);
+
         FML_DLOG(INFO)
             << "hi Animator::AwaitVSync AsyncWaitForVsync callback start";
         if (self) {

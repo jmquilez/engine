@@ -89,7 +89,7 @@ class Animator final {
   void DrawLastLayerTree(
       std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder);
 
-  void AwaitVSync();
+  void AwaitVSync(uint64_t flow_id);
 
   // Clear |trace_flow_ids_| if |frame_scheduled_| is false.
   void ScheduleMaybeClearTraceFlowIds();
