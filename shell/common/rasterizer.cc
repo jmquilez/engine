@@ -366,7 +366,7 @@ fml::Milliseconds Rasterizer::GetFrameBudget() const {
 RasterStatus Rasterizer::DoDraw(
     std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder,
     std::shared_ptr<flutter::LayerTree> layer_tree) {
-  FML_DLOG(ERROR) << "hi Rasterizer::DoDraw start";
+  FML_DLOG(INFO) << "hi Rasterizer::DoDraw start";
   TRACE_EVENT_WITH_FRAME_NUMBER(frame_timings_recorder, "flutter",
                                 "Rasterizer::DoDraw");
   FML_DCHECK(delegate_.GetTaskRunners()
@@ -374,7 +374,7 @@ RasterStatus Rasterizer::DoDraw(
                  ->RunsTasksOnCurrentThread());
 
   if (!layer_tree || !surface_) {
-    FML_DLOG(ERROR) << "hi Rasterizer::DoDraw early return kFailed";
+    FML_DLOG(INFO) << "hi Rasterizer::DoDraw early return kFailed";
     return RasterStatus::kFailed;
   }
 
@@ -386,14 +386,16 @@ RasterStatus Rasterizer::DoDraw(
   if (raster_status == RasterStatus::kSuccess) {
     last_layer_tree_ = std::move(layer_tree);
   } else if (ShouldResubmitFrame(raster_status)) {
+    TRACE_EVENT0("flutter", "RasterResubmit");  // NOTE MODIFIED add
     resubmitted_layer_tree_ = std::move(layer_tree);
     resubmitted_recorder_ = frame_timings_recorder->CloneUntil(
         FrameTimingsRecorder::State::kBuildEnd);
-    FML_DLOG(ERROR)
+    FML_DLOG(INFO)
         << "hi Rasterizer::DoDraw early return since ShouldResubmitFrame";
     return raster_status;
   } else if (raster_status == RasterStatus::kDiscarded) {
-    FML_DLOG(ERROR) << "hi Rasterizer::DoDraw early return since kDiscarded";
+    TRACE_EVENT0("flutter", "RasterDiscarded");  // NOTE MODIFIED add
+    FML_DLOG(INFO) << "hi Rasterizer::DoDraw early return since kDiscarded";
     return raster_status;
   }
 
@@ -416,11 +418,6 @@ RasterStatus Rasterizer::DoDraw(
       frame_timings_recorder->GetRasterEndTime();
   fml::TimePoint frame_target_time =
       frame_timings_recorder->GetVsyncTargetTime();
-  FML_DLOG(ERROR) << "hi Rasterizer::DoDraw compute SceneDisplayLag "
-                  << " raster_finish_time="
-                  << raster_finish_time.ToEpochDelta().ToMicroseconds()
-                  << " frame_target_time="
-                  << frame_target_time.ToEpochDelta().ToMicroseconds();
   if (raster_finish_time > frame_target_time) {
     fml::TimePoint latest_frame_target_time =
         delegate_.GetLatestFrameTargetTime();
@@ -467,19 +464,19 @@ RasterStatus Rasterizer::DoDraw(
   if (raster_thread_merger_) {
     if (raster_thread_merger_->DecrementLease() ==
         fml::RasterThreadStatus::kUnmergedNow) {
-      FML_DLOG(ERROR) << "hi Rasterizer::DoDraw early return kEnqueuePipeline";
+      FML_DLOG(INFO) << "hi Rasterizer::DoDraw early return kEnqueuePipeline";
       return RasterStatus::kEnqueuePipeline;
     }
   }
 
-  FML_DLOG(ERROR) << "hi Rasterizer::DoDraw end";
+  FML_DLOG(INFO) << "hi Rasterizer::DoDraw end";
   return raster_status;
 }
 
 RasterStatus Rasterizer::DrawToSurface(
     FrameTimingsRecorder& frame_timings_recorder,
     flutter::LayerTree& layer_tree) {
-  FML_DLOG(ERROR) << "hi Rasterizer::DrawToSurface start";
+  FML_DLOG(INFO) << "hi Rasterizer::DrawToSurface start";
   FML_DCHECK(surface_);
 
   RasterStatus raster_status;
@@ -495,8 +492,8 @@ RasterStatus Rasterizer::DrawToSurface(
             }));
   }
 
-  FML_DLOG(ERROR) << "hi Rasterizer::DrawToSurface end, raster_status="
-                  << static_cast<int>(raster_status);
+  FML_DLOG(INFO) << "hi Rasterizer::DrawToSurface end, raster_status="
+                 << static_cast<int>(raster_status);
   return raster_status;
 }
 
