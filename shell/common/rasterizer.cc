@@ -386,7 +386,6 @@ RasterStatus Rasterizer::DoDraw(
   if (raster_status == RasterStatus::kSuccess) {
     last_layer_tree_ = std::move(layer_tree);
   } else if (ShouldResubmitFrame(raster_status)) {
-    TRACE_EVENT0("flutter", "RasterResubmit");  // NOTE MODIFIED add
     resubmitted_layer_tree_ = std::move(layer_tree);
     resubmitted_recorder_ = frame_timings_recorder->CloneUntil(
         FrameTimingsRecorder::State::kBuildEnd);
@@ -394,7 +393,6 @@ RasterStatus Rasterizer::DoDraw(
         << "hi Rasterizer::DoDraw early return since ShouldResubmitFrame";
     return raster_status;
   } else if (raster_status == RasterStatus::kDiscarded) {
-    TRACE_EVENT0("flutter", "RasterDiscarded");  // NOTE MODIFIED add
     FML_DLOG(INFO) << "hi Rasterizer::DoDraw early return since kDiscarded";
     return raster_status;
   }
