@@ -1012,6 +1012,60 @@ void Shell::OnPlatformViewDispatchPlatformMessage(
       }));
 }
 
+// NOTE MODIFIED ADD, hacky impl
+// #6124
+class PointerDataPacketDispatchMerger {
+ public:
+  static PointerDataPacketDispatchMerger& Instance() {
+    static PointerDataPacketDispatchMerger instance;
+    return instance;
+  }
+
+  void OnUpstream(std::unique_ptr<PointerDataPacket> packet,
+                  uint64_t flow_id,
+                  const TaskRunners& task_runners,
+                  const fml::WeakPtr<Engine>& weak_engine) {
+    pending_storage_ids_.push_back(
+        PointerDataPacketStorage::Instance().AddPending(*packet));
+    pending_packets_.push_back(std::move(packet));
+
+    if (!has_pending_post_task_) {
+      has_pending_post_task_ = true;
+
+      task_runners.GetUITaskRunner()->PostTask(fml::MakeCopyable(
+          [this, engine = weak_engine, flow_id = flow_id]() mutable {
+            has_pending_post_task_ = false;
+
+            std::vector<uint8_t> total_buffer;
+            for (const std::unique_ptr<PointerDataPacket>& packet :
+                 pending_packets_) {
+              const std::vector<uint8_t>& packet_buffer = packet->data();
+              total_buffer.insert(total_buffer.end(), packet_buffer.begin(),
+                                  packet_buffer.end());
+            }
+            pending_packets_.clear();
+            std::unique_ptr<PointerDataPacket> gathered_packet =
+                std::make_unique<PointerDataPacket>(total_buffer);
+
+            if (engine) {
+              engine->DispatchPointerDataPacket(std::move(gathered_packet),
+                                                flow_id);
+            }
+
+            for (int64_t storage_id : pending_storage_ids_) {
+              PointerDataPacketStorage::Instance().RemovePending(storage_id);
+            }
+            pending_storage_ids_.clear();
+          }));
+    }
+  }
+
+ private:
+  bool has_pending_post_task_{false};
+  std::vector<std::unique_ptr<PointerDataPacket>> pending_packets_;
+  std::vector<int64_t> pending_storage_ids_;
+};
+
 // |PlatformView::Delegate|
 void Shell::OnPlatformViewDispatchPointerDataPacket(
     std::unique_ptr<PointerDataPacket> packet) {
@@ -1020,19 +1074,25 @@ void Shell::OnPlatformViewDispatchPointerDataPacket(
   FML_DCHECK(is_setup_);
   FML_DCHECK(task_runners_.GetPlatformTaskRunner()->RunsTasksOnCurrentThread());
 
-  // NOTE ADD
-  int64_t storage_id = PointerDataPacketStorage::Instance().AddPending(*packet);
+  PointerDataPacketDispatchMerger::Instance().OnUpstream(
+      std::move(packet), next_pointer_flow_id_, task_runners_, weak_engine_);
 
-  task_runners_.GetUITaskRunner()->PostTask(fml::MakeCopyable(
-      [engine = weak_engine_, packet = std::move(packet),
-       flow_id = next_pointer_flow_id_, storage_id = storage_id]() mutable {
-        if (engine) {
-          engine->DispatchPointerDataPacket(std::move(packet), flow_id);
-        }
+  // version before #6124
+  //  // NOTE ADD
+  //  int64_t storage_id =
+  //  PointerDataPacketStorage::Instance().AddPending(*packet);
+  //
+  //  task_runners_.GetUITaskRunner()->PostTask(fml::MakeCopyable(
+  //      [engine = weak_engine_, packet = std::move(packet),
+  //       flow_id = next_pointer_flow_id_, storage_id = storage_id]() mutable {
+  //        if (engine) {
+  //          engine->DispatchPointerDataPacket(std::move(packet), flow_id);
+  //        }
+  //
+  //        // NOTE ADD
+  //        PointerDataPacketStorage::Instance().RemovePending(storage_id);
+  //      }));
 
-        // NOTE ADD
-        PointerDataPacketStorage::Instance().RemovePending(storage_id);
-      }));
   next_pointer_flow_id_++;
 }
 
