@@ -94,7 +94,7 @@ void VsyncWaiterAndroid::OnVsyncFromJava(JNIEnv* env,
                                          jlong refreshPeriodNanos,
                                          jlong java_baton) {
   //  FML_DLOG(INFO) << "hi VsyncWaiterAndroid::OnVsyncFromJava start";
-  TRACE_EVENT0("flutter", "VSYNC");
+  TRACE_EVENT0("flutter", "VSYNC_renamed");  // rename since #6049
 
   auto frame_time =
       fml::TimePoint::Now() - fml::TimeDelta::FromNanoseconds(frameDelayNanos);

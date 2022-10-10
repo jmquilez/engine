@@ -151,23 +151,22 @@ void VsyncWaiter::ScheduleSecondaryCallback(uintptr_t id,
   AwaitVSyncForSecondaryCallback();
 }
 
-// #6107
-// void TracePseudoVsync(fml::TimePoint start, fml::TimePoint end) {
-//  // not working
-//  // https://github.com/fzyzcjy/yplusplus/issues/6049#issuecomment-1270892321
-//  //  fml::tracing::TraceEventAsyncComplete("flutter", "VSYNC",
-//  //  frame_start_time,
-//  //                                        frame_target_time);
-//
-//  // ref [TraceEvent0]
-//  fml::tracing::TraceTimelineEvent("flutter", "VSYNC",
-//                                   start.ToEpochDelta().ToMicroseconds(), 0,
-//                                   Dart_Timeline_Event_Begin, {}, {});
-//  // ref [TraceEventEnd]
-//  fml::tracing::TraceTimelineEvent("flutter", "VSYNC",
-//                                   end.ToEpochDelta().ToMicroseconds(), 0,
-//                                   Dart_Timeline_Event_End, {}, {});
-//}
+void TracePseudoVsync(fml::TimePoint start, fml::TimePoint end) {
+  // not working
+  // https://github.com/fzyzcjy/yplusplus/issues/6049#issuecomment-1270892321
+  //  fml::tracing::TraceEventAsyncComplete("flutter", "VSYNC",
+  //  frame_start_time,
+  //                                        frame_target_time);
+
+  // ref [TraceEvent0]
+  fml::tracing::TraceTimelineEvent("flutter", "VSYNC",
+                                   start.ToEpochDelta().ToMicroseconds(), 0,
+                                   Dart_Timeline_Event_Begin, {}, {});
+  // ref [TraceEventEnd]
+  fml::tracing::TraceTimelineEvent("flutter", "VSYNC",
+                                   end.ToEpochDelta().ToMicroseconds(), 0,
+                                   Dart_Timeline_Event_End, {}, {});
+}
 
 void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
                                fml::TimePoint frame_target_time,
@@ -230,23 +229,21 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
       false);
   */
 
-  // #6107
-  //  // for debug #5988
-  //  // use the name "VSYNC" since #6049
-  //  TracePseudoVsync(frame_start_time, frame_target_time);
-  //  if (last_timeline_report_vsync_target_time_.has_value()) {
-  //    fml::TimeDelta rough_frame_duration = frame_target_time -
-  //    frame_start_time; for (fml::TimePoint t = frame_target_time -
-  //    rough_frame_duration;
-  //         t > last_timeline_report_vsync_target_time_.value() +
-  //                 fml::TimeDelta::FromMilliseconds(1);
-  //         t = t - rough_frame_duration) {
-  //      TracePseudoVsync(t - rough_frame_duration,
-  //                       // -1us to avoid multi events be treated as one (?)
-  //                       t - fml::TimeDelta::FromMicroseconds(1));
-  //    }
-  //  }
-  //  last_timeline_report_vsync_target_time_ = frame_target_time;
+  // for debug #5988
+  // use the name "VSYNC" since #6049
+  TracePseudoVsync(frame_start_time, frame_target_time);
+  if (last_timeline_report_vsync_target_time_.has_value()) {
+    fml::TimeDelta rough_frame_duration = frame_target_time - frame_start_time;
+    for (fml::TimePoint t = frame_target_time - rough_frame_duration;
+         t > last_timeline_report_vsync_target_time_.value() +
+                 fml::TimeDelta::FromMilliseconds(1);
+         t = t - rough_frame_duration) {
+      TracePseudoVsync(t - rough_frame_duration,
+                       // -1us to avoid multi events be treated as one (?)
+                       t - fml::TimeDelta::FromMicroseconds(1));
+    }
+  }
+  last_timeline_report_vsync_target_time_ = frame_target_time;
 
   if (callback) {
     auto flow_identifier = fml::tracing::TraceNonce();

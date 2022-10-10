@@ -98,7 +98,7 @@ class VsyncWaiter : public std::enable_shared_from_this<VsyncWaiter> {
   std::mutex callback_mutex_;
   Callback callback_;
   std::unordered_map<uintptr_t, fml::closure> secondary_callbacks_;
-  //  std::optional<fml::TimePoint> last_timeline_report_vsync_target_time_{};
+  std::optional<fml::TimePoint> last_timeline_report_vsync_target_time_{};
 
   void PauseDartMicroTasks();
   static void ResumeDartMicroTasks(fml::TaskQueueId ui_task_queue_id);
