@@ -262,7 +262,10 @@ abstract class FlutterView {
   ///   scheduling of frames.
   /// * [RendererBinding], the Flutter framework class which manages layout and
   ///   painting.
-  void render(Scene scene, {Duration? fallbackVsyncTargetTime}) => _render(scene, fallbackVsyncTargetTime?.inMicroseconds ?? -1);
+  void render(Scene scene, {Duration? fallbackVsyncTargetTime}) =>
+      _render(scene, fallbackVsyncTargetTime != null
+          ? fallbackVsyncTargetTime.inMicroseconds * 1000
+          : -1);
 
   @FfiNative<Void Function(Pointer<Void>, Int64)>('PlatformConfigurationNativeApi::Render')
   external static void _render(Scene scene, int fallbackVsyncTargetTime);
