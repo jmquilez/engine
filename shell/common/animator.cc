@@ -211,6 +211,7 @@ void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
   if (!result.success) {
     FML_DLOG(INFO) << "hi Animator::Render return since !success";
     FML_DLOG(INFO) << "No pending continuation to commit";
+    TRACE_EVENT0("flutter", "NoPendingContinuation");  // NOTE MODIFIED add
     return;
   }
 
