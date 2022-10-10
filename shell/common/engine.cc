@@ -443,7 +443,8 @@ Dart_Handle Engine::PointerDataPacketStorageReadPendingAndClear() {
   return PointerDataPacketStorage::ReadPendingAndClearStatic();
 }
 
-void Engine::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
+void Engine::Render(std::shared_ptr<flutter::LayerTree> layer_tree,
+                    fml::TimePoint fallback_vsync_target_time) {
   if (!layer_tree) {
     return;
   }
@@ -454,7 +455,7 @@ void Engine::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
     return;
   }
 
-  animator_->Render(std::move(layer_tree));
+  animator_->Render(std::move(layer_tree), fallback_vsync_target_time);
 }
 
 void Engine::UpdateSemantics(SemanticsNodeUpdates update,

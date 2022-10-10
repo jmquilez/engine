@@ -70,7 +70,8 @@ class PlatformConfigurationClient {
   /// @brief      Updates the client's rendering on the GPU with the newly
   ///             provided Scene.
   ///
-  virtual void Render(Scene* scene) = 0;
+  virtual void Render(Scene* scene,
+                      fml::TimePoint fallback_vsync_target_time) = 0;
 
   //--------------------------------------------------------------------------
   /// @brief      Receives a updated semantics tree from the Framework.
@@ -477,7 +478,7 @@ class PlatformConfigurationNativeApi {
 
   static Dart_Handle PointerDataPacketStorageReadPendingAndClear();
 
-  static void Render(Scene* scene);
+  static void Render(Scene* scene, int64_t fallback_vsync_target_time);
 
   static void UpdateSemantics(SemanticsUpdate* update);
 

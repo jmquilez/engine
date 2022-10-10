@@ -167,7 +167,8 @@ void Animator::BeginFrame(
   FML_DLOG(INFO) << "hi Animator::BeginFrame end normally";
 }
 
-void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
+void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree,
+                      fml::TimePoint fallback_vsync_target_time) {
   FML_DLOG(INFO) << "hi Animator::Render start";
 
   has_rendered_ = true;
@@ -176,7 +177,15 @@ void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree) {
   if (!frame_timings_recorder_) {
     // Framework can directly call render with a built scene.
     frame_timings_recorder_ = std::make_unique<FrameTimingsRecorder>();
-    const fml::TimePoint placeholder_time = fml::TimePoint::Now();
+
+    // NOTE MODIFIED
+    // "<0" means not provided
+    const fml::TimePoint placeholder_time =
+        fallback_vsync_target_time.ToEpochDelta().ToMicroseconds() < 0
+            ? fml::TimePoint::Now()
+            : fallback_vsync_target_time;
+    //    const fml::TimePoint placeholder_time = fml::TimePoint::Now();
+
     frame_timings_recorder_->RecordVsync(placeholder_time, placeholder_time);
     frame_timings_recorder_->RecordBuildStart(placeholder_time);
   }

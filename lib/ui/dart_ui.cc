@@ -95,7 +95,7 @@ typedef CanvasPath Path;
   V(PlatformConfigurationNativeApi::ScheduleFrame, 0)                 \
   /*V(LastVsyncInfo::ReadToDart, 0)*/                                 \
   V(PlatformConfigurationNativeApi::PointerDataPacketStorageReadPendingAndClear, 0) \
-  V(PlatformConfigurationNativeApi::Render, 1)                        \
+  V(PlatformConfigurationNativeApi::Render, 2)                        \
   V(PlatformConfigurationNativeApi::UpdateSemantics, 1)               \
   V(PlatformConfigurationNativeApi::SetNeedsReportTimings, 1)         \
   V(PlatformConfigurationNativeApi::SetIsolateDebugName, 1)           \

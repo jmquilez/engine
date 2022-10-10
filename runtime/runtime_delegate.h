@@ -27,7 +27,8 @@ class RuntimeDelegate {
 
   virtual Dart_Handle PointerDataPacketStorageReadPendingAndClear() = 0;
 
-  virtual void Render(std::shared_ptr<flutter::LayerTree> layer_tree) = 0;
+  virtual void Render(std::shared_ptr<flutter::LayerTree> layer_tree,
+                      fml::TimePoint fallback_vsync_target_time) = 0;
 
   virtual void UpdateSemantics(SemanticsNodeUpdates update,
                                CustomAccessibilityActionUpdates actions) = 0;
