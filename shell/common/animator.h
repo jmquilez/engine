@@ -113,8 +113,7 @@ class Animator final {
   bool has_rendered_ = false;
 
   // NOTE MODIFIED add (hack)
-  std::optional<fml::TimePoint>
-      next_vsync_target_time_if_should_directly_call_in_await_vsync_;
+  std::optional<fml::TimePoint> last_begin_frame_recorded_frame_target_time_;
 
   fml::WeakPtrFactory<Animator> weak_factory_;
 
