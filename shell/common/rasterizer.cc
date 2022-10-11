@@ -5,7 +5,9 @@
 #include "flutter/shell/common/rasterizer.h"
 
 #include <algorithm>
+#include <chrono>
 #include <memory>
+#include <thread>
 #include <utility>
 
 #include "flow/frame_timings.h"
@@ -502,9 +504,78 @@ RasterStatus Rasterizer::DrawToSurface(
   return raster_status;
 }
 
+template <typename T>
+std::string to_string(const T& value) {
+  std::ostringstream ss;
+  ss << value;
+  return ss.str();
+}
+
 void Rasterizer::MaybeSleepBeforeSubmit(
     FrameTimingsRecorder& frame_timings_recorder) {
-  // TODO
+  static const int MAX_HISTORY = 5;
+  static const int HISTORY_THRESH = 3;
+  // NOTE a bit *more* than enough to allow errors
+  static const fml::TimeDelta SAFE_MARGIN =
+      fml::TimeDelta::FromMicroseconds(500);
+  // TODO assume 60fps in this prototype
+  fml::TimeDelta FRAME_DURATION = fml::TimeDelta::FromMicroseconds(16777);
+
+  fml::TimePoint vsync_target_time =
+      frame_timings_recorder.GetVsyncTargetTime();
+  fml::TimePoint now = fml::TimePoint::Now();
+
+  int curr_latency = static_cast<int>(
+      (now - vsync_target_time + FRAME_DURATION * 2).ToMicroseconds() /
+      FRAME_DURATION.ToMicroseconds());
+
+  // naive heuristics currently
+  int history_larger_latency_count = 0;
+  for (int history_latency : history_latencies_) {
+    if (history_latency > curr_latency) {
+      history_larger_latency_count++;
+    }
+  }
+  bool should_sleep = history_larger_latency_count >= HISTORY_THRESH;
+
+  // very naive (just +1 latency), should be fancier later, e.g. determine from
+  // history
+  int expect_latency = curr_latency + 1;
+  // we want to wake up at the *beginngin* of that vsync interval
+  fml::TimePoint wakeup_time =
+      vsync_target_time + FRAME_DURATION * (expect_latency - 2) + SAFE_MARGIN;
+
+  fml::TimeDelta sleep_duration = wakeup_time - now;
+
+  std::ostringstream info;
+  info << "should_sleep=" << should_sleep    //
+       << ", curr_latency=" << curr_latency  //
+       << ", vsync_target_time"
+       << vsync_target_time.ToEpochDelta().ToMicroseconds()                  //
+       << ", now" << now.ToEpochDelta().ToMicroseconds()                     //
+       << ", wakeup_time" << wakeup_time.ToEpochDelta().ToMicroseconds()     //
+       << ", sleep_duration" << sleep_duration.ToMicroseconds()              //
+       << ", history_larger_latency_count=" << history_larger_latency_count  //
+       << ", history_latencies=";
+  for (int history_latency : history_latencies_) {
+    info << history_latency << ",";
+  }
+  info << ", ";
+  TRACE_EVENT1("flutter", "Rasterizer::MaybeSleepBeforeSubmit", "info",
+               info.str().c_str());
+
+  {
+    history_latencies_.push_back(curr_latency);
+    while (history_latencies_.size() > MAX_HISTORY) {
+      history_latencies_.pop_front();
+    }
+  }
+
+  if (should_sleep) {
+    // TODO may use signals etc, instead of sleeping
+    std::this_thread::sleep_for(
+        std::chrono::microseconds(sleep_duration.ToMicroseconds()));
+  }
 }
 
 /// Unsafe because it assumes we have access to the GPU which isn't the case

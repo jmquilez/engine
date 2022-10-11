@@ -525,7 +525,10 @@ class Rasterizer final : public SnapshotDelegate,
   static bool NoDiscard(const flutter::LayerTree& layer_tree) { return false; }
   static bool ShouldResubmitFrame(const RasterStatus& raster_status);
 
+  // NOTE MODIFIED add begin
   void MaybeSleepBeforeSubmit(FrameTimingsRecorder& frame_timings_recorder);
+  std::deque<int> history_latencies_;
+  // NOTE MODIFIED add end
 
   Delegate& delegate_;
   MakeGpuImageBehavior gpu_image_behavior_;
