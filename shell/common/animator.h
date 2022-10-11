@@ -44,9 +44,6 @@ class Animator final {
 
     virtual void OnAnimatorDrawLastLayerTree(
         std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) = 0;
-
-    // NOTE MODIFIED add (hack)
-    virtual fml::TimePoint GetLatestFrameTargetTime() const = 0;
   };
 
   Animator(Delegate& delegate,
@@ -114,6 +111,9 @@ class Animator final {
   SkISize last_layer_tree_size_ = {0, 0};
   std::deque<uint64_t> trace_flow_ids_;
   bool has_rendered_ = false;
+
+  // NOTE MODIFIED add (hack)
+  std::optional<fml::TimePoint> last_begin_frame_recorded_frame_target_time_;
 
   fml::WeakPtrFactory<Animator> weak_factory_;
 
