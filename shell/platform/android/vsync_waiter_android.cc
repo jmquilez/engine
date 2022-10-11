@@ -51,6 +51,8 @@ void VsyncWaiterAndroid::AwaitVSync() {
     auto* weak_this = new std::weak_ptr<VsyncWaiter>(shared_from_this());
     jlong java_baton = reinterpret_cast<jlong>(weak_this);
     task_runners_.GetPlatformTaskRunner()->PostTask([java_baton]() {
+      TRACE_EVENT0("flutter", "android-AwaitVSync-in-PlatformTask");
+
       //      FML_DLOG(INFO) << "hi VsyncWaiterAndroid::AwaitVSync
       //      PlatformTaskRunner "
       //                        "PostTask start"
