@@ -378,7 +378,7 @@ void Animator::AwaitVSync(uint64_t flow_id) {
     // ref: how [Animator::Render] fills the recorder
     std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder =
         std::make_unique<FrameTimingsRecorder>();
-    frame_timings_recorder_->RecordVsync(
+    frame_timings_recorder->RecordVsync(
         next_vsync_target_time - ONE_FRAME_DURATION, next_vsync_target_time);
 
     TRACE_FLOW_END("flutter", "RequestFrame", flow_id);
