@@ -332,15 +332,18 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
 
 const auto ONE_FRAME_DURATION = fml::TimeDelta::FromMicroseconds(16667);
 
+fml::TimePoint NextVsync(fml::TimePoint now, fml::TimePoint arbitrary_vsync) {
+  int n = static_cast<int>(std::ceil((now - arbitrary_vsync).ToMicrosecondsF() /
+                                     ONE_FRAME_DURATION.ToMicrosecondsF()));
+  return arbitrary_vsync + ONE_FRAME_DURATION * n;
+}
+
 std::optional<fml::TimePoint> AwaitVSyncShouldDirectlyCall(
     fml::TimePoint arbitrary_vsync_target_time) {
   // #6087
   fml::TimePoint now = fml::TimePoint::Now();
   fml::TimePoint next_vsync_target_time =
-      arbitrary_vsync_target_time +
-      ONE_FRAME_DURATION *
-          (1 + (now - arbitrary_vsync_target_time).ToMicroseconds() /
-                   ONE_FRAME_DURATION.ToMicroseconds());
+      NextVsync(now, arbitrary_vsync_target_time);
   FML_DCHECK(now <= next_vsync_target_time);
   const auto THRESHOLD = fml::TimeDelta::FromMilliseconds(2);  // by experiments
   bool should_directly_call = (next_vsync_target_time - now) < THRESHOLD;
