@@ -352,7 +352,10 @@ std::optional<fml::TimePoint> AwaitVSyncShouldDirectlyCall(
       // instead of next vsync of [now]
       // https://github.com/fzyzcjy/yplusplus/issues/6144#issuecomment-1274035115
       NextVsync(last_begin_frame_ending_time, arbitrary_vsync_target_time);
-  const auto THRESHOLD = fml::TimeDelta::FromMilliseconds(2);  // by experiments
+  // by experiment, 2ms is sometimes not enough, i.e. call VsyncWaiter at
+  // 2ms before next vsync will lead to one frame missing
+  // https://github.com/fzyzcjy/yplusplus/issues/6147#issuecomment-1274094709
+  const auto THRESHOLD = fml::TimeDelta::FromMilliseconds(3);
   bool should_directly_call = (next_vsync_target_time - now) < THRESHOLD;
 
   std::ostringstream info;
