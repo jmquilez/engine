@@ -603,7 +603,11 @@ RasterStatus Rasterizer::DrawToSurfaceUnsafe(
   //
   // Deleting a surface also clears the GL context. Therefore, acquire the
   // frame after calling `BeginFrame` as this operation resets the GL context.
-  auto frame = surface_->AcquireFrame(layer_tree.frame_size());
+  auto frame = surface_->AcquireFrame(
+      layer_tree.frame_size(), [this, &frame_timings_recorder] {
+        // NOTE MODIFIED ADD
+        MaybeSleepBeforeSubmit(frame_timings_recorder);
+      });
   if (frame == nullptr) {
     return RasterStatus::kFailed;
   }
@@ -670,9 +674,6 @@ RasterStatus Rasterizer::DrawToSurfaceUnsafe(
         raster_status == RasterStatus::kSkipAndRetry) {
       return raster_status;
     }
-
-    // NOTE MODIFIED ADD
-    MaybeSleepBeforeSubmit(frame_timings_recorder);
 
     SurfaceFrame::SubmitInfo submit_info;
     // TODO (https://github.com/flutter/flutter/issues/105596): this can be in
