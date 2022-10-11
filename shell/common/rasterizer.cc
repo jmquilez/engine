@@ -430,13 +430,13 @@ RasterStatus Rasterizer::DoDraw(
     const auto frame_lag =
         (latest_frame_target_time - frame_target_time).ToMillisecondsF();
     const int vsync_transitions_missed = round(frame_lag / frame_budget_millis);
-    FML_DLOG(ERROR) << "hi Rasterizer::DoDraw calc SceneDisplayLag"
-                    << " raster_finish_time="
-                    << raster_finish_time.ToEpochDelta().ToMicroseconds()
-                    << " latest_frame_target_time="
-                    << latest_frame_target_time.ToEpochDelta().ToMicroseconds()
-                    << " frame_target_time="
-                    << frame_target_time.ToEpochDelta().ToMicroseconds();
+    FML_DLOG(INFO) << "hi Rasterizer::DoDraw calc SceneDisplayLag"
+                   << " raster_finish_time="
+                   << raster_finish_time.ToEpochDelta().ToMicroseconds()
+                   << " latest_frame_target_time="
+                   << latest_frame_target_time.ToEpochDelta().ToMicroseconds()
+                   << " frame_target_time="
+                   << frame_target_time.ToEpochDelta().ToMicroseconds();
     fml::tracing::TraceEventAsyncComplete(
         "flutter",                    // category
         "SceneDisplayLag",            // name

@@ -65,7 +65,7 @@ static fml::TimePoint FxlToDartOrEarlier(fml::TimePoint time) {
 
 void Animator::BeginFrame(
     std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
-  FML_DLOG(ERROR) << "hi Animator::BeginFrame start";
+  FML_DLOG(INFO) << "hi Animator::BeginFrame start";
 
   //  // test logs
   //  FML_DLOG(INFO) << "hi this is FML_DLOG(INFO)";
@@ -169,7 +169,7 @@ void Animator::BeginFrame(
 
 void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree,
                       fml::TimePoint fallback_vsync_target_time) {
-  FML_DLOG(ERROR) << "hi Animator::Render start";
+  FML_DLOG(INFO) << "hi Animator::Render start";
 
   has_rendered_ = true;
   last_layer_tree_size_ = layer_tree->frame_size();
@@ -194,14 +194,13 @@ void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree,
     //    placeholder_time);
     //    frame_timings_recorder_->RecordBuildStart(placeholder_time);
 
-    FML_DLOG(ERROR)
-        << "populate frame_timings_recorder_ "
-        << " fallback_vsync_target_time="
-        << fallback_vsync_target_time.ToEpochDelta().ToMicroseconds()
-        << " placeholder_time="
-        << placeholder_time.ToEpochDelta().ToMicroseconds()
-        << " vsync_target_time="
-        << vsync_target_time.ToEpochDelta().ToMicroseconds();
+    FML_DLOG(INFO) << "populate frame_timings_recorder_ "
+                   << " fallback_vsync_target_time="
+                   << fallback_vsync_target_time.ToEpochDelta().ToMicroseconds()
+                   << " placeholder_time="
+                   << placeholder_time.ToEpochDelta().ToMicroseconds()
+                   << " vsync_target_time="
+                   << vsync_target_time.ToEpochDelta().ToMicroseconds();
   }
 
   TRACE_EVENT_WITH_FRAME_NUMBER(frame_timings_recorder_, "flutter",
