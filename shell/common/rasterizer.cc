@@ -504,13 +504,6 @@ RasterStatus Rasterizer::DrawToSurface(
   return raster_status;
 }
 
-template <typename T>
-std::string to_string(const T& value) {
-  std::ostringstream ss;
-  ss << value;
-  return ss.str();
-}
-
 void Rasterizer::MaybeSleepBeforeSubmit(
     FrameTimingsRecorder& frame_timings_recorder) {
   static const int MAX_HISTORY = 5;
