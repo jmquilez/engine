@@ -64,6 +64,37 @@ static fml::TimePoint FxlToDartOrEarlier(fml::TimePoint time) {
   return fml::TimePoint::FromEpochDelta(time - fxl_now + dart_now);
 }
 
+const auto ONE_FRAME_DURATION = fml::TimeDelta::FromMicroseconds(16667);
+
+fml::TimePoint NextVsync(fml::TimePoint now, fml::TimePoint arbitrary_vsync) {
+  int n = static_cast<int>(std::ceil((now - arbitrary_vsync).ToMicrosecondsF() /
+                                     ONE_FRAME_DURATION.ToMicrosecondsF()));
+  return arbitrary_vsync + ONE_FRAME_DURATION * n;
+}
+
+std::optional<fml::TimePoint> AwaitVSyncShouldDirectlyCall(
+    fml::TimePoint arbitrary_vsync_target_time) {
+  // #6087
+  fml::TimePoint now = fml::TimePoint::Now();
+  fml::TimePoint next_vsync_target_time =
+      NextVsync(now, arbitrary_vsync_target_time);
+  FML_DCHECK(now <= next_vsync_target_time);
+  const auto THRESHOLD = fml::TimeDelta::FromMilliseconds(2);  // by experiments
+  bool should_directly_call = (next_vsync_target_time - now) < THRESHOLD;
+
+  std::ostringstream info;
+  info << "should_directly_call=" << should_directly_call  //
+       << "now=" << now.ToEpochDelta().ToMicroseconds()    //
+       << "next_vsync_target_time="
+       << next_vsync_target_time.ToEpochDelta().ToMicroseconds()
+       << "arbitrary_vsync_target_time="
+       << arbitrary_vsync_target_time.ToEpochDelta().ToMicroseconds();
+  TRACE_EVENT1("flutter", "AwaitVSync info", "info", info.str().c_str());
+
+  return should_directly_call ? std::optional(next_vsync_target_time)
+                              : std::nullopt;
+}
+
 void Animator::BeginFrame(
     std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
   FML_DLOG(INFO) << "hi Animator::BeginFrame start";
@@ -136,7 +167,9 @@ void Animator::BeginFrame(
   dart_frame_deadline_ = FxlToDartOrEarlier(frame_target_time);
   uint64_t frame_number = frame_timings_recorder_->GetFrameNumber();
   delegate_.OnAnimatorBeginFrame(frame_target_time, frame_number);
-  last_begin_frame_recorded_frame_target_time_ = frame_target_time;
+
+  next_vsync_target_time_if_should_directly_call_in_await_vsync_ =
+      AwaitVSyncShouldDirectlyCall(frame_target_time);
 
   if (!frame_scheduled_ && has_rendered_) {
     // Under certain workloads (such as our parent view resizing us, which is
@@ -331,50 +364,23 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
   FML_DLOG(INFO) << "hi Animator::RequestFrame end";
 }
 
-const auto ONE_FRAME_DURATION = fml::TimeDelta::FromMicroseconds(16667);
-
-fml::TimePoint NextVsync(fml::TimePoint now, fml::TimePoint arbitrary_vsync) {
-  int n = static_cast<int>(std::ceil((now - arbitrary_vsync).ToMicrosecondsF() /
-                                     ONE_FRAME_DURATION.ToMicrosecondsF()));
-  return arbitrary_vsync + ONE_FRAME_DURATION * n;
-}
-
-std::optional<fml::TimePoint> AwaitVSyncShouldDirectlyCall(
-    fml::TimePoint arbitrary_vsync_target_time) {
-  // #6087
-  fml::TimePoint now = fml::TimePoint::Now();
-  fml::TimePoint next_vsync_target_time =
-      NextVsync(now, arbitrary_vsync_target_time);
-  FML_DCHECK(now <= next_vsync_target_time);
-  const auto THRESHOLD = fml::TimeDelta::FromMilliseconds(2);  // by experiments
-  bool should_directly_call = (next_vsync_target_time - now) < THRESHOLD;
-
-  std::ostringstream info;
-  info << "should_directly_call=" << should_directly_call  //
-       << "now=" << now.ToEpochDelta().ToMicroseconds()    //
-       << "next_vsync_target_time="
-       << next_vsync_target_time.ToEpochDelta().ToMicroseconds()
-       << "arbitrary_vsync_target_time="
-       << arbitrary_vsync_target_time.ToEpochDelta().ToMicroseconds();
-  TRACE_EVENT1("flutter", "AwaitVSync info", "info", info.str().c_str());
-
-  return should_directly_call ? std::optional(next_vsync_target_time)
-                              : std::nullopt;
-}
-
 void Animator::AwaitVSync(uint64_t flow_id) {
   TRACE_EVENT0("flutter", "Animator::AwaitVSync");  // NOTE MODIFIED add
   TRACE_FLOW_STEP("flutter", "RequestFrame", flow_id);
 
-  std::optional<fml::TimePoint> next_vsync_target_time_if_should_directly_call =
-      last_begin_frame_recorded_frame_target_time_.has_value()
-          ? AwaitVSyncShouldDirectlyCall(
-                last_begin_frame_recorded_frame_target_time_.value())
-          : std::nullopt;
+  //  std::optional<fml::TimePoint>
+  //  next_vsync_target_time_if_should_directly_call =
+  //      last_begin_frame_recorded_frame_target_time_.has_value()
+  //          ? AwaitVSyncShouldDirectlyCall(
+  //                last_begin_frame_recorded_frame_target_time_.value())
+  //          : std::nullopt;
 
-  if (next_vsync_target_time_if_should_directly_call.has_value()) {
+  if (next_vsync_target_time_if_should_directly_call_in_await_vsync_
+          .has_value()) {
     const fml::TimePoint next_vsync_target_time =
-        next_vsync_target_time_if_should_directly_call.value();
+        next_vsync_target_time_if_should_directly_call_in_await_vsync_.value();
+    next_vsync_target_time_if_should_directly_call_in_await_vsync_ =
+        std::nullopt;
 
     // ref: how [Animator::Render] fills the recorder
     std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder =
