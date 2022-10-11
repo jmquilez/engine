@@ -333,19 +333,32 @@ void Animator::AwaitVSync(uint64_t flow_id) {
   TRACE_EVENT0("flutter", "Animator::AwaitVSync");  // NOTE MODIFIED add
   TRACE_FLOW_STEP("flutter", "RequestFrame", flow_id);
 
-  waiter_->AsyncWaitForVsync(
-      [self = weak_factory_.GetWeakPtr(),
-       flow_id](std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
-        TRACE_FLOW_END("flutter", "RequestFrame", flow_id);
+  // #6087
+  bool shouldDirectlyCall = TODO;
+  if (shouldDirectlyCall) {
+    std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder = TODO;
 
-        if (self) {
-          if (self->CanReuseLastLayerTree()) {
-            self->DrawLastLayerTree(std::move(frame_timings_recorder));
-          } else {
-            self->BeginFrame(std::move(frame_timings_recorder));
+    if (CanReuseLastLayerTree()) {
+      DrawLastLayerTree(std::move(frame_timings_recorder));
+    } else {
+      BeginFrame(std::move(frame_timings_recorder));
+    }
+  } else {
+    waiter_->AsyncWaitForVsync(
+        [self = weak_factory_.GetWeakPtr(), flow_id](
+            std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
+          TRACE_FLOW_END("flutter", "RequestFrame", flow_id);
+
+          if (self) {
+            if (self->CanReuseLastLayerTree()) {
+              self->DrawLastLayerTree(std::move(frame_timings_recorder));
+            } else {
+              self->BeginFrame(std::move(frame_timings_recorder));
+            }
           }
-        }
-      });
+        });
+  }
+
   if (has_rendered_) {
     delegate_.OnAnimatorNotifyIdle(dart_frame_deadline_);
   }
