@@ -201,6 +201,17 @@ void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree,
                    << placeholder_time.ToEpochDelta().ToMicroseconds()
                    << " vsync_target_time="
                    << vsync_target_time.ToEpochDelta().ToMicroseconds();
+
+    std::ostringstream info;
+    info << "now=" << now.ToEpochDelta().ToMicroseconds()
+         << " fallback_vsync_target_time="
+         << fallback_vsync_target_time.ToEpochDelta().ToMicroseconds()
+         << " placeholder_time="
+         << placeholder_time.ToEpochDelta().ToMicroseconds()
+         << " vsync_target_time="
+         << vsync_target_time.ToEpochDelta().ToMicroseconds();
+    TRACE_EVENT1("flutter", "populate frame_timings_recorder", "info",
+                 info.str().c_str());
   }
 
   TRACE_EVENT_WITH_FRAME_NUMBER(frame_timings_recorder_, "flutter",
