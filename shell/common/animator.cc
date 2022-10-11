@@ -336,7 +336,8 @@ void Animator::AwaitVSync(uint64_t flow_id) {
   const auto ONE_FRAME_DURATION = fml::TimeDelta::FromMicroseconds(16667);
 
   // #6087
-  fml::TimePoint arbitrary_vsync_target_time = TODO;
+  fml::TimePoint arbitrary_vsync_target_time =
+      delegate_.GetLatestFrameTargetTime();
   fml::TimePoint now = fml::TimePoint::Now();
   fml::TimePoint next_vsync_target_time =
       arbitrary_vsync_target_time +
