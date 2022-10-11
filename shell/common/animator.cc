@@ -333,32 +333,22 @@ void Animator::AwaitVSync(uint64_t flow_id) {
   TRACE_EVENT0("flutter", "Animator::AwaitVSync");  // NOTE MODIFIED add
   TRACE_FLOW_STEP("flutter", "RequestFrame", flow_id);
 
-  FML_DLOG(INFO) << "hi Animator::AwaitVSync start";
   waiter_->AsyncWaitForVsync(
       [self = weak_factory_.GetWeakPtr(),
        flow_id](std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
         TRACE_FLOW_END("flutter", "RequestFrame", flow_id);
 
-        FML_DLOG(INFO)
-            << "hi Animator::AwaitVSync AsyncWaitForVsync callback start";
         if (self) {
           if (self->CanReuseLastLayerTree()) {
-            FML_DLOG(INFO) << "hi Animator::AwaitVSync AsyncWaitForVsync "
-                              "callback call DrawLastLayerTree";
             self->DrawLastLayerTree(std::move(frame_timings_recorder));
           } else {
-            FML_DLOG(INFO) << "hi Animator::AwaitVSync AsyncWaitForVsync "
-                              "callback call BeginFrame";
             self->BeginFrame(std::move(frame_timings_recorder));
           }
         }
-        FML_DLOG(INFO)
-            << "hi Animator::AwaitVSync AsyncWaitForVsync callback end";
       });
   if (has_rendered_) {
     delegate_.OnAnimatorNotifyIdle(dart_frame_deadline_);
   }
-  FML_DLOG(INFO) << "hi Animator::AwaitVSync end";
 }
 
 void Animator::ScheduleSecondaryVsyncCallback(uintptr_t id,
