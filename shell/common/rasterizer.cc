@@ -506,8 +506,9 @@ RasterStatus Rasterizer::DrawToSurface(
 
 void Rasterizer::MaybeSleepBeforeSubmit(
     FrameTimingsRecorder& frame_timings_recorder) {
-  static const int MAX_HISTORY = 5;
-  static const int HISTORY_THRESH = 3;
+  // about thresh - #6145
+  static const int MAX_HISTORY = 10;
+  static const int HISTORY_THRESH = 2;
   // NOTE a bit *more* than enough to allow errors
   static const fml::TimeDelta SAFE_MARGIN =
       fml::TimeDelta::FromMicroseconds(500);
