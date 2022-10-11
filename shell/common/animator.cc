@@ -347,7 +347,7 @@ std::optional<fml::TimePoint> AwaitVSyncShouldDirectlyCall(
     fml::TimePoint last_begin_frame_ending_time) {
   // #6087
   fml::TimePoint now = fml::TimePoint::Now();
-  fml::TimePoint next_vsync_target_time =
+  fml::TimePoint nearest_future_vsync_target_time =
       // NOTE should consider next vsync of [last_begin_frame_ending_time]
       // instead of next vsync of [now]
       // https://github.com/fzyzcjy/yplusplus/issues/6144#issuecomment-1274035115
@@ -356,19 +356,28 @@ std::optional<fml::TimePoint> AwaitVSyncShouldDirectlyCall(
   // 2ms before next vsync will lead to one frame missing
   // https://github.com/fzyzcjy/yplusplus/issues/6147#issuecomment-1274094709
   const auto THRESHOLD = fml::TimeDelta::FromMilliseconds(3);
-  bool should_directly_call = (next_vsync_target_time - now) < THRESHOLD;
+  bool should_directly_call =
+      (nearest_future_vsync_target_time - now) < THRESHOLD;
+
+  std::optional<fml::TimePoint> ans =
+      should_directly_call
+          // note we need +one_frame
+          // https://github.com/fzyzcjy/yplusplus/issues/6147#issuecomment-1274100126
+          ? std::optional(nearest_future_vsync_target_time + ONE_FRAME_DURATION)
+          : std::nullopt;
 
   std::ostringstream info;
   info << "should_directly_call=" << should_directly_call  //
-       << "now=" << now.ToEpochDelta().ToMicroseconds()    //
-       << "next_vsync_target_time="
-       << next_vsync_target_time.ToEpochDelta().ToMicroseconds()
-       << "arbitrary_vsync_target_time="
-       << arbitrary_vsync_target_time.ToEpochDelta().ToMicroseconds();
+       << ", now=" << now.ToEpochDelta().ToMicroseconds()  //
+       << ", nearest_future_vsync_target_time="
+       << nearest_future_vsync_target_time.ToEpochDelta().ToMicroseconds()
+       << ", arbitrary_vsync_target_time="
+       << arbitrary_vsync_target_time.ToEpochDelta().ToMicroseconds()
+       << ", ans="
+       << (ans.has_value() ? ans.value().ToEpochDelta().ToMicroseconds() : -1);
   TRACE_EVENT1("flutter", "AwaitVSync info", "info", info.str().c_str());
 
-  return should_directly_call ? std::optional(next_vsync_target_time)
-                              : std::nullopt;
+  return ans;
 }
 
 void Animator::AwaitVSync(uint64_t flow_id) {
