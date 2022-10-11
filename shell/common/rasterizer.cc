@@ -504,6 +504,13 @@ RasterStatus Rasterizer::DrawToSurface(
   return raster_status;
 }
 
+template <typename T>
+std::string to_string(const T& value) {
+  std::ostringstream ss;
+  ss << value;
+  return ss.str();
+}
+
 void Rasterizer::MaybeSleepBeforeSubmit(
     FrameTimingsRecorder& frame_timings_recorder) {
   static const int MAX_HISTORY = 5;
@@ -540,23 +547,22 @@ void Rasterizer::MaybeSleepBeforeSubmit(
 
   fml::TimeDelta sleep_duration = wakeup_time - now;
 
-  //  std::ostringstream info;
-  //  info << "should_sleep=" << should_sleep    //
-  //       << ", curr_latency=" << curr_latency  //
-  //       << ", vsync_target_time"
-  //       << vsync_target_time.ToEpochDelta().ToMicroseconds() //
-  //       << ", now" << now.ToEpochDelta().ToMicroseconds() //
-  //       << ", wakeup_time" << wakeup_time.ToEpochDelta().ToMicroseconds() //
-  //       << ", sleep_duration" << sleep_duration.ToMicroseconds() //
-  //       << ", history_larger_latency_count=" << history_larger_latency_count
-  //       //
-  //       << ", history_latencies=";
-  //  for (int history_latency : history_latencies_) {
-  //    info << history_latency << ",";
-  //  }
-  //  info << ", ";
-  //  TRACE_EVENT1("flutter", "Rasterizer::MaybeSleepBeforeSubmit", "info",
-  //  info.str().c_str());
+  std::ostringstream info;
+  info << "should_sleep=" << should_sleep    //
+       << ", curr_latency=" << curr_latency  //
+       << ", vsync_target_time"
+       << vsync_target_time.ToEpochDelta().ToMicroseconds()                  //
+       << ", now" << now.ToEpochDelta().ToMicroseconds()                     //
+       << ", wakeup_time" << wakeup_time.ToEpochDelta().ToMicroseconds()     //
+       << ", sleep_duration" << sleep_duration.ToMicroseconds()              //
+       << ", history_larger_latency_count=" << history_larger_latency_count  //
+       << ", history_latencies=";
+  for (int history_latency : history_latencies_) {
+    info << history_latency << ",";
+  }
+  info << ", ";
+  TRACE_EVENT1("flutter", "Rasterizer::MaybeSleepBeforeSubmit", "info",
+               info.str().c_str());
 
   {
     history_latencies_.push_back(curr_latency);
@@ -566,8 +572,6 @@ void Rasterizer::MaybeSleepBeforeSubmit(
   }
 
   if (should_sleep) {
-    TRACE_EVENT0("flutter", "SleepBeforeSubmit");
-
     // TODO may use signals etc, instead of sleeping
     std::this_thread::sleep_for(
         std::chrono::microseconds(sleep_duration.ToMicroseconds()));
