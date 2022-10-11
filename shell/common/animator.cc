@@ -5,6 +5,7 @@
 #include "flutter/shell/common/animator.h"
 
 #include "flutter/flow/frame_timings.h"
+#include "flutter/fml/make_copyable.h"
 #include "flutter/fml/time/time_point.h"
 #include "flutter/fml/trace_event.h"
 #include "third_party/dart/runtime/include/dart_tools_api.h"
@@ -381,12 +382,20 @@ void Animator::AwaitVSync(uint64_t flow_id) {
     frame_timings_recorder->RecordVsync(
         next_vsync_target_time - ONE_FRAME_DURATION, next_vsync_target_time);
 
-    TRACE_FLOW_END("flutter", "RequestFrame", flow_id);
-    if (CanReuseLastLayerTree()) {
-      DrawLastLayerTree(std::move(frame_timings_recorder));
-    } else {
-      BeginFrame(std::move(frame_timings_recorder));
-    }
+    task_runners_.GetUITaskRunner()->PostTask(fml::MakeCopyable(
+        [self = weak_factory_.GetWeakPtr(),
+         frame_timings_recorder = std::move(frame_timings_recorder),
+         flow_id]() mutable {
+          TRACE_FLOW_END("flutter", "RequestFrame", flow_id);
+
+          if (self) {
+            if (self->CanReuseLastLayerTree()) {
+              self->DrawLastLayerTree(std::move(frame_timings_recorder));
+            } else {
+              self->BeginFrame(std::move(frame_timings_recorder));
+            }
+          }
+        }));
   } else {
     waiter_->AsyncWaitForVsync(
         [self = weak_factory_.GetWeakPtr(), flow_id](
