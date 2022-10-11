@@ -502,6 +502,11 @@ RasterStatus Rasterizer::DrawToSurface(
   return raster_status;
 }
 
+void Rasterizer::MaybeSleepBeforeSubmit(
+    FrameTimingsRecorder& frame_timings_recorder) {
+  // TODO
+}
+
 /// Unsafe because it assumes we have access to the GPU which isn't the case
 /// when iOS is backgrounded, for example.
 /// \see Rasterizer::DrawToSurface
@@ -594,6 +599,9 @@ RasterStatus Rasterizer::DrawToSurfaceUnsafe(
         raster_status == RasterStatus::kSkipAndRetry) {
       return raster_status;
     }
+
+    // NOTE MODIFIED ADD
+    MaybeSleepBeforeSubmit(frame_timings_recorder);
 
     SurfaceFrame::SubmitInfo submit_info;
     // TODO (https://github.com/flutter/flutter/issues/105596): this can be in
