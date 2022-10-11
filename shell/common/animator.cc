@@ -136,7 +136,10 @@ void Animator::BeginFrame(
   dart_frame_deadline_ = FxlToDartOrEarlier(frame_target_time);
   uint64_t frame_number = frame_timings_recorder_->GetFrameNumber();
   delegate_.OnAnimatorBeginFrame(frame_target_time, frame_number);
+
+  // NOTE MODIFIED ADD
   last_begin_frame_recorded_frame_target_time_ = frame_target_time;
+  last_begin_frame_ending_time_ = fml::TimePoint::Now();
 
   if (!frame_scheduled_ && has_rendered_) {
     // Under certain workloads (such as our parent view resizing us, which is
@@ -340,12 +343,15 @@ fml::TimePoint NextVsync(fml::TimePoint now, fml::TimePoint arbitrary_vsync) {
 }
 
 std::optional<fml::TimePoint> AwaitVSyncShouldDirectlyCall(
-    fml::TimePoint arbitrary_vsync_target_time) {
+    fml::TimePoint arbitrary_vsync_target_time,
+    fml::TimePoint last_begin_frame_ending_time) {
   // #6087
   fml::TimePoint now = fml::TimePoint::Now();
   fml::TimePoint next_vsync_target_time =
-      NextVsync(now, arbitrary_vsync_target_time);
-  FML_DCHECK(now <= next_vsync_target_time);
+      // NOTE should consider next vsync of [last_begin_frame_ending_time]
+      // instead of next vsync of [now]
+      // https://github.com/fzyzcjy/yplusplus/issues/6144#issuecomment-1274035115
+      NextVsync(last_begin_frame_ending_time, arbitrary_vsync_target_time);
   const auto THRESHOLD = fml::TimeDelta::FromMilliseconds(2);  // by experiments
   bool should_directly_call = (next_vsync_target_time - now) < THRESHOLD;
 
@@ -369,7 +375,8 @@ void Animator::AwaitVSync(uint64_t flow_id) {
   std::optional<fml::TimePoint> next_vsync_target_time_if_should_directly_call =
       last_begin_frame_recorded_frame_target_time_.has_value()
           ? AwaitVSyncShouldDirectlyCall(
-                last_begin_frame_recorded_frame_target_time_.value())
+                last_begin_frame_recorded_frame_target_time_.value(),
+                last_begin_frame_ending_time_.value())
           : std::nullopt;
 
   if (next_vsync_target_time_if_should_directly_call.has_value()) {
