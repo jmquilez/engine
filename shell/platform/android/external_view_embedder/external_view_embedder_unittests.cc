@@ -48,7 +48,7 @@ class SurfaceMock : public Surface {
 
   MOCK_METHOD(std::unique_ptr<SurfaceFrame>,
               AcquireFrame,
-              (const SkISize& size),
+              (const SkISize& size, Surface::BeforePresentCallback),
               (override));
 
   MOCK_METHOD(SkMatrix, GetRootTransformation, (), (const, override));

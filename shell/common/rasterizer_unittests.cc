@@ -42,8 +42,9 @@ class MockDelegate : public Rasterizer::Delegate {
 class MockSurface : public Surface {
  public:
   MOCK_METHOD0(IsValid, bool());
-  MOCK_METHOD1(AcquireFrame,
-               std::unique_ptr<SurfaceFrame>(const SkISize& size));
+  MOCK_METHOD2(AcquireFrame,
+               std::unique_ptr<SurfaceFrame>(const SkISize& size,
+                                             Surface::BeforePresentCallback));
   MOCK_CONST_METHOD0(GetRootTransformation, SkMatrix());
   MOCK_METHOD0(GetContext, GrDirectContext*());
   MOCK_METHOD0(GetExternalViewEmbedder, ExternalViewEmbedder*());
