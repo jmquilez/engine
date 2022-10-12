@@ -1066,10 +1066,30 @@ class PointerDataPacketDispatchMerger {
   std::vector<int64_t> pending_storage_ids_;
 };
 
+std::string extract_packet_info(const PointerDataPacket& packet) {
+  std::ostringstream info;
+  info << "[";
+  for (size_t i = 0; i < packet.data().size() / sizeof(PointerData); ++i) {
+    if (i > 0) {
+      info << ",";
+    }
+    const PointerData* item = reinterpret_cast<const PointerData*>(
+        &packet.data()[i * sizeof(PointerData)]);
+    info << "{\"time_stamp\": " << item->time_stamp
+         << ", \"physical_y\": " << item->physical_y << "}";
+  }
+  info << "]";
+  return info.str();
+}
+
 // |PlatformView::Delegate|
 void Shell::OnPlatformViewDispatchPointerDataPacket(
     std::unique_ptr<PointerDataPacket> packet) {
-  TRACE_EVENT0("flutter", "Shell::OnPlatformViewDispatchPointerDataPacket");
+  // NOTE MODIFIED
+  //  TRACE_EVENT0("flutter", "Shell::OnPlatformViewDispatchPointerDataPacket");
+  TRACE_EVENT1("flutter", "Shell::OnPlatformViewDispatchPointerDataPacket",
+               "info", extract_packet_info(*packet).c_str());
+
   TRACE_FLOW_BEGIN("flutter", "PointerEvent", next_pointer_flow_id_);
   FML_DCHECK(is_setup_);
   FML_DCHECK(task_runners_.GetPlatformTaskRunner()->RunsTasksOnCurrentThread());
