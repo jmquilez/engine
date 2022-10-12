@@ -1025,25 +1025,38 @@ class PointerDataPacketDispatchMerger {
                   uint64_t flow_id,
                   const TaskRunners& task_runners,
                   const fml::WeakPtr<Engine>& weak_engine) {
-    pending_storage_ids_.push_back(
-        PointerDataPacketStorage::Instance().AddPending(*packet));
-    pending_packets_.push_back(std::move(packet));
+    int64_t curr_storage_id =
+        PointerDataPacketStorage::Instance().AddPending(*packet);
 
-    if (!has_pending_post_task_) {
+    bool should_post_task;
+    {
+      std::scoped_lock state_lock(mutex_);
+
+      pending_storage_ids_.push_back(curr_storage_id);
+      pending_packets_.push_back(std::move(packet));
+
+      should_post_task = !has_pending_post_task_;
       has_pending_post_task_ = true;
+    }
 
+    if (should_post_task) {
       task_runners.GetUITaskRunner()->PostTask(fml::MakeCopyable(
           [this, engine = weak_engine, flow_id = flow_id]() mutable {
-            has_pending_post_task_ = false;
-
+            // TODO make the critical section smaller
             std::vector<uint8_t> total_buffer;
-            for (const std::unique_ptr<PointerDataPacket>& packet :
-                 pending_packets_) {
-              const std::vector<uint8_t>& packet_buffer = packet->data();
-              total_buffer.insert(total_buffer.end(), packet_buffer.begin(),
-                                  packet_buffer.end());
+            {
+              std::scoped_lock state_lock(mutex_);
+
+              has_pending_post_task_ = false;
+
+              for (const std::unique_ptr<PointerDataPacket>& packet :
+                   pending_packets_) {
+                const std::vector<uint8_t>& packet_buffer = packet->data();
+                total_buffer.insert(total_buffer.end(), packet_buffer.begin(),
+                                    packet_buffer.end());
+              }
+              pending_packets_.clear();
             }
-            pending_packets_.clear();
             std::unique_ptr<PointerDataPacket> gathered_packet =
                 std::make_unique<PointerDataPacket>(total_buffer);
 
@@ -1052,15 +1065,21 @@ class PointerDataPacketDispatchMerger {
                                                 flow_id);
             }
 
-            for (int64_t storage_id : pending_storage_ids_) {
-              PointerDataPacketStorage::Instance().RemovePending(storage_id);
+            // TODO make the critical section smaller
+            {
+              std::scoped_lock state_lock(mutex_);
+
+              for (int64_t storage_id : pending_storage_ids_) {
+                PointerDataPacketStorage::Instance().RemovePending(storage_id);
+              }
+              pending_storage_ids_.clear();
             }
-            pending_storage_ids_.clear();
           }));
     }
   }
 
  private:
+  std::mutex mutex_;
   bool has_pending_post_task_{false};
   std::vector<std::unique_ptr<PointerDataPacket>> pending_packets_;
   std::vector<int64_t> pending_storage_ids_;
