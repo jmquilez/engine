@@ -187,7 +187,7 @@ void Animator::Render(std::shared_ptr<flutter::LayerTree> layer_tree,
     const fml::TimePoint now = fml::TimePoint::Now();
     const fml::TimePoint vsync_target_time =
         // negative means do not provide
-        fallback_vsync_target_time.ToEpochDelta().ToMicroseconds() < 0
+        fallback_vsync_target_time.ToEpochDelta().ToMicroseconds() > 0
             ? fallback_vsync_target_time
             : now;
     const fml::TimePoint placeholder_time = std::min(now, vsync_target_time);
