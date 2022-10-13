@@ -55,7 +55,8 @@ class Animator final {
   void RequestFrame(bool regenerate_layer_tree = true);
 
   void Render(std::shared_ptr<flutter::LayerTree> layer_tree,
-              fml::TimePoint fallback_vsync_target_time);
+              fml::TimePoint fallback_vsync_target_time =
+                  fml::TimePoint::FromTicks(-1));
 
   const std::weak_ptr<VsyncWaiter> GetVsyncWaiter() const;
 
