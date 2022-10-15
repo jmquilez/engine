@@ -207,9 +207,6 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
   // #5835
   LastVsyncInfo::Instance().RecordVsync(frame_start_time, frame_target_time);
 
-  // temporarily disable this
-  // https://github.com/fzyzcjy/flutter_smooth/issues/38#issuecomment-1262271851
-  /*
   // hack: schedule immediately to ensure [LastVsyncInfo] is updated every 16ms
   // in real implementation, will instead have real start/pause mechanism
   // instead of such blindly refresh
@@ -222,12 +219,18 @@ void VsyncWaiter::FireCallback(fml::TimePoint frame_start_time,
   //                    "ensure every frame we see info";
   // NOTE must be *after* checking empty and early return
   //      for that, see #5835
-  ScheduleSecondaryCallback(
-      reinterpret_cast<uintptr_t>(&LastVsyncInfo::Instance()), [] {},
-      // NOTE do NOT sanity check thread, since closure is empty and we only
-      // want to trigger scheduling
-      false);
-  */
+  task_runners_.GetPlatformTaskRunner()->PostDelayedTask(
+      [this] {
+        ScheduleSecondaryCallback(
+            reinterpret_cast<uintptr_t>(&LastVsyncInfo::Instance()), [] {},
+            // NOTE do NOT sanity check thread, since closure is empty and we
+            // only want to trigger scheduling
+            false);
+      },
+      // NOTE add delay - without this delay, have seen FireCallback multi
+      // times for roughly one vsync within a few milliseconds
+      // #6197
+      fml::TimeDelta::FromMilliseconds(3));
 
   // for debug #5988
   // use the name "VSYNC" since #6049
