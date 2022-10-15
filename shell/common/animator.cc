@@ -40,7 +40,7 @@ Animator::Animator(Delegate& delegate,
               ? 1
               : 2)),
 #endif  // SHELL_ENABLE_METAL
-      pending_frame_semaphore_(1),
+        //      pending_frame_semaphore_(1),
       weak_factory_(this) {
 }
 
@@ -94,7 +94,8 @@ void Animator::BeginFrame(
   frame_scheduled_ = false;
   notify_idle_task_id_++;
   regenerate_layer_tree_ = false;
-  pending_frame_semaphore_.Signal();
+  //  pending_frame_semaphore_.Signal();
+  pending_await_vsync_id_ = std::nullopt;
 
   FML_DLOG(INFO) << "hi Animator::BeginFrame producer_continuation_="
                  << static_cast<bool>(producer_continuation_);
@@ -278,7 +279,9 @@ bool Animator::CanReuseLastLayerTree() {
 
 void Animator::DrawLastLayerTree(
     std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
-  pending_frame_semaphore_.Signal();
+  //  pending_frame_semaphore_.Signal();
+  pending_await_vsync_id_ = std::nullopt;
+
   // In this case BeginFrame doesn't get called, we need to
   // adjust frame timings to update build start and end times,
   // given that the frame doesn't get built in this case, we
@@ -291,7 +294,9 @@ void Animator::DrawLastLayerTree(
 
 static int next_request_frame_flow_id_ = 100;
 
-void Animator::RequestFrame(bool regenerate_layer_tree) {
+void Animator::RequestFrame(
+    bool regenerate_layer_tree,
+    std::optional<fml::TimePoint> force_directly_call_next_vsync_target_time) {
   TRACE_EVENT0("flutter", "Animator::RequestFrame");  // NOTE MODIFIED add
   auto request_frame_flow_id = next_request_frame_flow_id_++;
   TRACE_FLOW_BEGIN("flutter", "RequestFrame", request_frame_flow_id);
@@ -301,12 +306,22 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
     regenerate_layer_tree_ = true;
   }
 
-  if (!pending_frame_semaphore_.TryWait()) {
+  // NOTE in new semantics, when really in "force_directly_call" mode,
+  //      should *cancel* previous pending call and schedule again
+  //      instead of skip scheduling #6218
+  //  if (!pending_frame_semaphore_.TryWait()) {
+  if (!force_directly_call_next_vsync_target_time.has_value() &&
+      pending_await_vsync_id_.load().has_value()) {
     // Multiple calls to Animator::RequestFrame will still result in a
     // single request to the VsyncWaiter.
     FML_DLOG(INFO) << "hi Animator::RequestFrame early return";
     return;
   }
+  // TODO this is not atomic with above
+  // NOTE when [pending_await_vsync_id_] is not null, this will effectively
+  // cancel the previous one
+  int curr_await_vsync_id = next_await_vsync_id_++;
+  pending_await_vsync_id_ = curr_await_vsync_id;
 
   // The AwaitVSync is going to call us back at the next VSync. However, we want
   // to be reasonably certain that the UI thread is not in the middle of a
@@ -318,7 +333,7 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
   task_runners_.GetUITaskRunner()->PostTask(
       [self = weak_factory_.GetWeakPtr(),
        frame_request_number = frame_request_number_,
-       flow_id = request_frame_flow_id]() {
+       flow_id = request_frame_flow_id, curr_await_vsync_id]() {
         FML_DLOG(INFO)
             << "hi Animator::RequestFrame UITaskRunner PostTask callback start";
         if (!self) {
@@ -326,7 +341,8 @@ void Animator::RequestFrame(bool regenerate_layer_tree) {
         }
         TRACE_EVENT_ASYNC_BEGIN0("flutter", "Frame Request Pending",
                                  frame_request_number);
-        self->AwaitVSync(flow_id);
+        self->AwaitVSync(flow_id, force_directly_call_next_vsync_target_time,
+                         curr_await_vsync_id);
         FML_DLOG(INFO)
             << "hi Animator::RequestFrame UITaskRunner PostTask callback end";
       });
@@ -382,7 +398,8 @@ std::optional<fml::TimePoint> AwaitVSyncShouldDirectlyCall(
 
 void Animator::AwaitVSync(
     uint64_t flow_id,
-    std::optional<fml::TimePoint> force_directly_call_next_vsync_target_time) {
+    std::optional<fml::TimePoint> force_directly_call_next_vsync_target_time,
+    int curr_await_vsync_id) {
   TRACE_EVENT0("flutter", "Animator::AwaitVSync");  // NOTE MODIFIED add
   TRACE_FLOW_STEP("flutter", "RequestFrame", flow_id);
 
@@ -407,11 +424,16 @@ void Animator::AwaitVSync(
 
     task_runners_.GetUITaskRunner()->PostTask(fml::MakeCopyable(
         [self = weak_factory_.GetWeakPtr(),
-         frame_timings_recorder = std::move(frame_timings_recorder),
-         flow_id]() mutable {
+         frame_timings_recorder = std::move(frame_timings_recorder), flow_id,
+         curr_await_vsync_id]() mutable {
           TRACE_FLOW_END("flutter", "RequestFrame", flow_id);
 
           if (self) {
+            // this is cancelled #6218
+            if (self->pending_await_vsync_id_.load() != curr_await_vsync_id) {
+              return;
+            }
+
             if (self->CanReuseLastLayerTree()) {
               self->DrawLastLayerTree(std::move(frame_timings_recorder));
             } else {
@@ -421,11 +443,16 @@ void Animator::AwaitVSync(
         }));
   } else {
     waiter_->AsyncWaitForVsync(
-        [self = weak_factory_.GetWeakPtr(), flow_id](
+        [self = weak_factory_.GetWeakPtr(), flow_id, curr_await_vsync_id](
             std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
           TRACE_FLOW_END("flutter", "RequestFrame", flow_id);
 
           if (self) {
+            // this is cancelled #6218
+            if (self->pending_await_vsync_id_.load() != curr_await_vsync_id) {
+              return;
+            }
+
             if (self->CanReuseLastLayerTree()) {
               self->DrawLastLayerTree(std::move(frame_timings_recorder));
             } else {

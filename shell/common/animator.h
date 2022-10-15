@@ -104,7 +104,7 @@ class Animator final {
   uint64_t frame_request_number_ = 1;
   fml::TimePoint dart_frame_deadline_;
   std::shared_ptr<LayerTreePipeline> layer_tree_pipeline_;
-  fml::Semaphore pending_frame_semaphore_;
+  //  fml::Semaphore pending_frame_semaphore_; // NOTE MODIFIED replaced
   LayerTreePipeline::ProducerContinuation producer_continuation_;
   bool regenerate_layer_tree_ = false;
   bool frame_scheduled_ = false;
@@ -116,6 +116,8 @@ class Animator final {
   // NOTE MODIFIED add (hack)
   std::optional<fml::TimePoint> last_begin_frame_recorded_frame_target_time_,
       last_begin_frame_ending_time_;
+  std::atomic<std::optional<int>> pending_await_vsync_id_{std::nullopt};
+  std::atomic<int> next_await_vsync_id_{1000};
 
   fml::WeakPtrFactory<Animator> weak_factory_;
 
