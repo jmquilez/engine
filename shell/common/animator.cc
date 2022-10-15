@@ -297,7 +297,13 @@ static int next_request_frame_flow_id_ = 100;
 void Animator::RequestFrame(
     bool regenerate_layer_tree,
     std::optional<fml::TimePoint> force_directly_call_next_vsync_target_time) {
-  TRACE_EVENT0("flutter", "Animator::RequestFrame");  // NOTE MODIFIED add
+  TRACE_EVENT1("flutter", "Animator::RequestFrame",
+               "force_directly_call_next_vsync_target_time",
+               std::to_string(force_directly_call_next_vsync_target_time
+                                  .value_or(fml::TimePoint::FromTicks(-1))
+                                  .ToEpochDelta()
+                                  .ToMicroseconds())
+                   .c_str());  // NOTE MODIFIED add
   auto request_frame_flow_id = next_request_frame_flow_id_++;
   TRACE_FLOW_BEGIN("flutter", "RequestFrame", request_frame_flow_id);
 
