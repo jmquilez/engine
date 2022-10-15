@@ -62,7 +62,9 @@ class PlatformConfigurationClient {
   /// @brief      Requests that, at the next appropriate opportunity, a new
   ///             frame be scheduled for rendering.
   ///
-  virtual void ScheduleFrame() = 0;
+  virtual void ScheduleFrame(
+      std::optional<fml::TimePoint>
+          force_directly_call_next_vsync_target_time) = 0;
 
   virtual Dart_Handle PointerDataPacketStorageReadPendingAndClear() = 0;
 
@@ -474,7 +476,8 @@ class PlatformConfigurationNativeApi {
  public:
   static std::string DefaultRouteName();
 
-  static void ScheduleFrame();
+  static void ScheduleFrame(
+      int64_t force_directly_call_next_vsync_target_time_microseconds);
 
   static Dart_Handle PointerDataPacketStorageReadPendingAndClear();
 

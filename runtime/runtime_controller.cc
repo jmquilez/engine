@@ -275,8 +275,9 @@ std::string RuntimeController::DefaultRouteName() {
 }
 
 // |PlatformConfigurationClient|
-void RuntimeController::ScheduleFrame() {
-  client_.ScheduleFrame();
+void RuntimeController::ScheduleFrame(
+    std::optional<fml::TimePoint> force_directly_call_next_vsync_target_time) {
+  client_.ScheduleFrame(true, force_directly_call_next_vsync_target_time);
 }
 
 Dart_Handle RuntimeController::PointerDataPacketStorageReadPendingAndClear() {

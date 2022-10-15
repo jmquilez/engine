@@ -336,6 +336,7 @@ void Animator::RequestFrame(
   task_runners_.GetUITaskRunner()->PostTask(
       [self = weak_factory_.GetWeakPtr(),
        frame_request_number = frame_request_number_,
+       force_directly_call_next_vsync_target_time,
        flow_id = request_frame_flow_id, curr_await_vsync_id]() {
         FML_DLOG(INFO)
             << "hi Animator::RequestFrame UITaskRunner PostTask callback start";
