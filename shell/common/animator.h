@@ -52,7 +52,10 @@ class Animator final {
 
   ~Animator();
 
-  void RequestFrame(bool regenerate_layer_tree = true);
+  void RequestFrame(
+      bool regenerate_layer_tree = true,
+      std::optional<fml::TimePoint> force_directly_call_next_vsync_target_time =
+          std::nullopt);
 
   void Render(std::shared_ptr<flutter::LayerTree> layer_tree,
               fml::TimePoint fallback_vsync_target_time =
@@ -91,7 +94,10 @@ class Animator final {
   void DrawLastLayerTree(
       std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder);
 
-  void AwaitVSync(uint64_t flow_id);
+  void AwaitVSync(
+      uint64_t flow_id,
+      std::optional<fml::TimePoint> force_directly_call_next_vsync_target_time,
+      int curr_await_vsync_id);
 
   // Clear |trace_flow_ids_| if |frame_scheduled_| is false.
   void ScheduleMaybeClearTraceFlowIds();
