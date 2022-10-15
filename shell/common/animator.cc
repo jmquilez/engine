@@ -400,7 +400,8 @@ void Animator::AwaitVSync(
     uint64_t flow_id,
     std::optional<fml::TimePoint> force_directly_call_next_vsync_target_time,
     int curr_await_vsync_id) {
-  TRACE_EVENT0("flutter", "Animator::AwaitVSync");  // NOTE MODIFIED add
+  TRACE_EVENT1("flutter", "Animator::AwaitVSync", "curr_await_vsync_id",
+               std::to_string(curr_await_vsync_id).c_str());
   TRACE_FLOW_STEP("flutter", "RequestFrame", flow_id);
 
   std::optional<fml::TimePoint> next_vsync_target_time_if_should_directly_call =
@@ -431,6 +432,7 @@ void Animator::AwaitVSync(
           if (self) {
             // this is cancelled #6218
             if (self->pending_await_vsync_id_.load() != curr_await_vsync_id) {
+              TRACE_EVENT0("flutter", "AwaitVSync-callback-cancelled");
               return;
             }
 
@@ -450,6 +452,7 @@ void Animator::AwaitVSync(
           if (self) {
             // this is cancelled #6218
             if (self->pending_await_vsync_id_.load() != curr_await_vsync_id) {
+              TRACE_EVENT0("flutter", "AwaitVSync-callback-cancelled");
               return;
             }
 
