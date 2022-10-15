@@ -380,16 +380,20 @@ std::optional<fml::TimePoint> AwaitVSyncShouldDirectlyCall(
   return ans;
 }
 
-void Animator::AwaitVSync(uint64_t flow_id) {
+void Animator::AwaitVSync(
+    uint64_t flow_id,
+    std::optional<fml::TimePoint> force_directly_call_next_vsync_target_time) {
   TRACE_EVENT0("flutter", "Animator::AwaitVSync");  // NOTE MODIFIED add
   TRACE_FLOW_STEP("flutter", "RequestFrame", flow_id);
 
   std::optional<fml::TimePoint> next_vsync_target_time_if_should_directly_call =
-      last_begin_frame_recorded_frame_target_time_.has_value()
-          ? AwaitVSyncShouldDirectlyCall(
-                last_begin_frame_recorded_frame_target_time_.value(),
-                last_begin_frame_ending_time_.value())
-          : std::nullopt;
+      force_directly_call_next_vsync_target_time.has_value()
+          ? force_directly_call_next_vsync_target_time.value()
+          : (last_begin_frame_recorded_frame_target_time_.has_value()
+                 ? AwaitVSyncShouldDirectlyCall(
+                       last_begin_frame_recorded_frame_target_time_.value(),
+                       last_begin_frame_ending_time_.value())
+                 : std::nullopt);
 
   if (next_vsync_target_time_if_should_directly_call.has_value()) {
     const fml::TimePoint next_vsync_target_time =
