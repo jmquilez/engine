@@ -315,6 +315,9 @@ void Animator::RequestFrame(
     // Multiple calls to Animator::RequestFrame will still result in a
     // single request to the VsyncWaiter.
     FML_DLOG(INFO) << "hi Animator::RequestFrame early return";
+    TRACE_EVENT1("flutter", "RequestFrame-skip", "pending_await_vsync_id_",
+                 std::to_string(pending_await_vsync_id_.load().value_or(-1))
+                     .c_str());  // NOTE MODIFIED add
     return;
   }
   // TODO this is not atomic with above
