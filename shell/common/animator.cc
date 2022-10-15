@@ -476,7 +476,13 @@ void Animator::AwaitVSync(
   }
 
   if (has_rendered_) {
-    delegate_.OnAnimatorNotifyIdle(dart_frame_deadline_);
+    // NOTE MODIFIED
+    // in the old days, we are only OK until the next vsync
+    // but now, we are OK until near the next of next vsync, because as long as
+    // we have a few ms for smooth to run preemptRender, we will not miss frames
+    delegate_.OnAnimatorNotifyIdle(
+        dart_frame_deadline_ + fml::TimeDelta::FromMicroseconds(16667 - 3000));
+    //    delegate_.OnAnimatorNotifyIdle(dart_frame_deadline_);
   }
 }
 
