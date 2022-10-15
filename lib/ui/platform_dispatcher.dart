@@ -719,7 +719,7 @@ class PlatformDispatcher {
           ? -1
           : forceDirectlyCallNextVsyncTargetTime.inMicroseconds);
 
-  @FfiNative<Void Function(int)>('PlatformConfigurationNativeApi::ScheduleFrame')
+  @FfiNative<Void Function(Int)>('PlatformConfigurationNativeApi::ScheduleFrame')
   external static void _scheduleFrame(int forceDirectlyCallNextVsyncTargetTime);
 
   LastVsyncInfo lastVsyncInfo() {

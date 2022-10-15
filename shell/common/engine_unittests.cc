@@ -49,7 +49,7 @@ class MockResponse : public PlatformMessageResponse {
 class MockRuntimeDelegate : public RuntimeDelegate {
  public:
   MOCK_METHOD0(DefaultRouteName, std::string());
-  MOCK_METHOD1(ScheduleFrame, void(bool));
+  MOCK_METHOD2(ScheduleFrame, void(bool, std::optional<fml::TimePoint>));
   MOCK_METHOD0(PointerDataPacketStorageReadPendingAndClear, Dart_Handle());
   MOCK_METHOD2(Render,
                void(std::shared_ptr<flutter::LayerTree>, fml::TimePoint));
