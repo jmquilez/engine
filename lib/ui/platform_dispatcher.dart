@@ -744,6 +744,12 @@ class PlatformDispatcher {
   @FfiNative<Handle Function()>('PlatformConfigurationNativeApi::PointerDataPacketStorageReadPendingAndClear')
   external static ByteData _pointerDataPacketStorageReadPendingAndClearStatic();
 
+  static bool notifyIdle(Duration deadline) => _notifyIdle(deadline.inMicroseconds);
+
+  // prototype, should not really name/place here
+  @FfiNative<Bool Function(Int64)>('PlatformConfigurationNativeApi::NotifyIdle')
+  external static bool _notifyIdle();
+
   /// Additional accessibility features that may be enabled by the platform.
   AccessibilityFeatures get accessibilityFeatures => configuration.accessibilityFeatures;
 

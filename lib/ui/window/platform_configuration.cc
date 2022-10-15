@@ -424,6 +424,15 @@ void PlatformConfigurationNativeApi::ScheduleFrame(
       force_directly_call_next_vsync_target_time);
 }
 
+bool PlatformConfigurationNativeApi::NotifyIdle(int64_t deadline_microseconds) {
+  fml::TimePoint deadline =
+      fml::TimePoint::FromTicks(deadline_microseconds * 1000);
+
+  UIDartState::ThrowIfUIOperationsProhibited();
+  return UIDartState::Current()->platform_configuration()->client()->NotifyIdle(
+      deadline);
+}
+
 Dart_Handle
 PlatformConfigurationNativeApi::PointerDataPacketStorageReadPendingAndClear() {
   UIDartState::ThrowIfUIOperationsProhibited();

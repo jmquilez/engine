@@ -66,6 +66,8 @@ class PlatformConfigurationClient {
       std::optional<fml::TimePoint>
           force_directly_call_next_vsync_target_time) = 0;
 
+  virtual bool NotifyIdle(fml::TimePoint deadline) = 0;
+
   virtual Dart_Handle PointerDataPacketStorageReadPendingAndClear() = 0;
 
   //--------------------------------------------------------------------------
@@ -478,6 +480,8 @@ class PlatformConfigurationNativeApi {
 
   static void ScheduleFrame(
       int64_t force_directly_call_next_vsync_target_time_microseconds);
+
+  static bool NotifyIdle(int64_t deadline_microseconds);
 
   static Dart_Handle PointerDataPacketStorageReadPendingAndClear();
 
