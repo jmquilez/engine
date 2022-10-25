@@ -6,6 +6,9 @@
 // @dart = 2.12
 part of dart.ui;
 
+String shortHash(Object? object) { return object.hashCode.toUnsigned(20).toRadixString(16).padLeft(5, '0'); }
+String describeIdentity(Object? object) => '${object.runtimeType}#${shortHash(object)}';
+
 /// An opaque object representing a composited scene.
 ///
 /// To create a Scene object, use a [SceneBuilder].
@@ -84,6 +87,9 @@ abstract class _EngineLayerWrapper implements EngineLayer {
   bool _debugWasUsedAsOldLayer = false;
 
   bool _debugCheckNotUsedAsOldLayer() {
+    if(runtimeType == ClipRectEngineLayer && _debugWasUsedAsOldLayer) {
+      print('hi _debugCheckNotUsedAsOldLayer see _debugWasUsedAsOldLayer=true, this=${describeIdentity(this)}');
+    }
     assert(
         !_debugWasUsedAsOldLayer,
         'Layer $runtimeType was previously used as oldLayer.\n'
@@ -244,6 +250,10 @@ class SceneBuilder extends NativeFieldWrapperClass1 {
       layer._debugCheckNotUsedAsOldLayer();
       assert(_debugCheckUsedOnce(layer, 'oldLayer in $methodName'));
       layer._debugWasUsedAsOldLayer = true;
+      if(layer.runtimeType == ClipRectEngineLayer) {
+        void printWrapped(String text) => RegExp('.{1,800}').allMatches(text).forEach((match) => print(match.group(0)));
+        printWrapped('hi _debugCheckCanBeUsedAsOldLayer set _debugWasUsedAsOldLayer:=true, this=${describeIdentity(this)} layer=${describeIdentity(layer)} stack=${StackTrace.current}');
+      }
       return true;
     }());
     return true;
@@ -354,6 +364,10 @@ class SceneBuilder extends NativeFieldWrapperClass1 {
     assert(clipBehavior != Clip.none);
     assert(_debugCheckCanBeUsedAsOldLayer(oldLayer, 'pushClipRect'));
     final EngineLayer engineLayer = EngineLayer._();
+
+    void printWrapped(String text) => RegExp('.{1,800}').allMatches(text).forEach((match) => print(match.group(0)));
+    printWrapped('hi pushClipRect new=${describeIdentity(engineLayer)} oldLayer=${describeIdentity(oldLayer)} stack=${StackTrace.current}');
+
     _pushClipRect(engineLayer, rect.left, rect.right, rect.top, rect.bottom, clipBehavior.index,
         oldLayer?._nativeLayer);
     final ClipRectEngineLayer layer = ClipRectEngineLayer._(engineLayer);
