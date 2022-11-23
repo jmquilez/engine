@@ -66,7 +66,7 @@ class PlatformConfigurationClient {
       std::optional<fml::TimePoint>
           force_directly_call_next_vsync_target_time) = 0;
 
-  virtual bool NotifyIdle(fml::TimePoint deadline) = 0;
+  virtual bool NotifyIdle(fml::TimeDelta deadline) = 0;
 
   virtual Dart_Handle PointerDataPacketStorageReadPendingAndClear() = 0;
 

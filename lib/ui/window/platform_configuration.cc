@@ -431,8 +431,8 @@ void PlatformConfigurationNativeApi::ScheduleFrame(
 }
 
 bool PlatformConfigurationNativeApi::NotifyIdle(int64_t deadline_microseconds) {
-  fml::TimePoint deadline =
-      fml::TimePoint::FromTicks(deadline_microseconds * 1000);
+  fml::TimeDelta deadline =
+      fml::TimePoint::FromTicks(deadline_microseconds * 1000).ToEpochDelta();
 
   UIDartState::ThrowIfUIOperationsProhibited();
   return UIDartState::Current()->platform_configuration()->client()->NotifyIdle(
