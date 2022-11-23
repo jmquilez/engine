@@ -58,12 +58,6 @@ void Animator::EnqueueTraceFlowId(uint64_t trace_flow_id) {
       });
 }
 
-static fml::TimePoint FxlToDartOrEarlier(fml::TimePoint time) {
-  auto dart_now = fml::TimeDelta::FromMicroseconds(Dart_TimelineGetMicros());
-  fml::TimePoint fxl_now = fml::TimePoint::Now();
-  return fml::TimePoint::FromEpochDelta(time - fxl_now + dart_now);
-}
-
 void Animator::BeginFrame(
     std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
   FML_DLOG(INFO) << "hi Animator::BeginFrame start";
@@ -92,7 +86,6 @@ void Animator::BeginFrame(
   }
 
   frame_scheduled_ = false;
-  notify_idle_task_id_++;
   regenerate_layer_tree_ = false;
   //  pending_frame_semaphore_.Signal();
   pending_await_vsync_id_ = std::nullopt;
@@ -134,7 +127,7 @@ void Animator::BeginFrame(
       frame_timings_recorder_->GetBuildStartTime());
   const fml::TimePoint frame_target_time =
       frame_timings_recorder_->GetVsyncTargetTime();
-  dart_frame_deadline_ = FxlToDartOrEarlier(frame_target_time);
+  dart_frame_deadline_ = frame_target_time.ToEpochDelta();
   uint64_t frame_number = frame_timings_recorder_->GetFrameNumber();
   delegate_.OnAnimatorBeginFrame(frame_target_time, frame_number);
 
@@ -143,29 +136,24 @@ void Animator::BeginFrame(
   last_begin_frame_ending_time_ = fml::TimePoint::Now();
 
   if (!frame_scheduled_ && has_rendered_) {
-    // Under certain workloads (such as our parent view resizing us, which is
-    // communicated to us by repeat viewport metrics events), we won't
-    // actually have a frame scheduled yet, despite the fact that we *will* be
-    // producing a frame next vsync (it will be scheduled once we receive the
-    // viewport event).  Because of this, we hold off on calling
-    // |OnAnimatorNotifyIdle| for a little bit, as that could cause garbage
-    // collection to trigger at a highly undesirable time.
+    // Wait a tad more than 3 60hz frames before reporting a big idle period.
+    // This is a heuristic that is meant to avoid giving false positives to the
+    // VM when we are about to schedule a frame in the next vsync, the idea
+    // being that if there have been three vsyncs with no frames it's a good
+    // time to start doing GC work.
     task_runners_.GetUITaskRunner()->PostDelayedTask(
-        [self = weak_factory_.GetWeakPtr(),
-         notify_idle_task_id = notify_idle_task_id_]() {
+        [self = weak_factory_.GetWeakPtr()]() {
           if (!self) {
             return;
           }
-          // If our (this task's) task id is the same as the current one
-          // (meaning there were no follow up frames to the |BeginFrame| call
-          // that posted this task) and no frame is currently scheduled, then
-          // assume that we are idle, and notify the engine of this.
-          if (notify_idle_task_id == self->notify_idle_task_id_ &&
-              !self->frame_scheduled_) {
+          auto now = fml::TimeDelta::FromMicroseconds(Dart_TimelineGetMicros());
+          // If there's a frame scheduled, bail.
+          // If there's no frame scheduled, but we're not yet past the last
+          // vsync deadline, bail.
+          if (!self->frame_scheduled_ && now > self->dart_frame_deadline_) {
             TRACE_EVENT0("flutter", "BeginFrame idle callback");
             self->delegate_.OnAnimatorNotifyIdle(
-                FxlToDartOrEarlier(fml::TimePoint::Now() +
-                                   fml::TimeDelta::FromMicroseconds(100000)));
+                now + fml::TimeDelta::FromMilliseconds(100));
           }
         },
         kNotifyIdleTaskWaitTime);
@@ -279,6 +267,9 @@ bool Animator::CanReuseLastLayerTree() {
 
 void Animator::DrawLastLayerTree(
     std::unique_ptr<FrameTimingsRecorder> frame_timings_recorder) {
+  // This method is very cheap, but this makes it explicitly clear in trace
+  // files.
+  TRACE_EVENT0("flutter", "Animator::DrawLastLayerTree");
   //  pending_frame_semaphore_.Signal();
   pending_await_vsync_id_ = std::nullopt;
 
@@ -309,6 +300,12 @@ void Animator::RequestFrame(
 
   FML_DLOG(INFO) << "hi Animator::RequestFrame start";
   if (regenerate_layer_tree) {
+    // This event will be closed by BeginFrame. BeginFrame will only be called
+    // if regenerating the layer tree. If a frame has been requested to update
+    // an external texture, this will be false and no BeginFrame call will
+    // happen.
+    TRACE_EVENT_ASYNC_BEGIN0("flutter", "Frame Request Pending",
+                             frame_request_number_);
     regenerate_layer_tree_ = true;
   }
 
