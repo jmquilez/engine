@@ -267,6 +267,7 @@ typedef CanvasPath Path;
   V(Path, setFillType, 2)                              \
   V(Path, shift, 4)                                    \
   V(Path, transform, 3)                                \
+  V(Path, dump, 0)                                     \
   V(PictureRecorder, endRecording, 2)                  \
   V(Picture, GetAllocationSize, 1)                     \
   V(Picture, dispose, 1)                               \
