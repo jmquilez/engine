@@ -1526,6 +1526,23 @@ class TextStyle {
   final List<FontVariation>? _fontVariations;
   final TextLeadingDistribution? _leadingDistribution;
 
+  // HACK
+  Int32List get encoded => _encoded;
+  String get fontFamily => _fontFamily;
+  List<String>? get fontFamilyFallback => _fontFamilyFallback;
+  double? get fontSize => _fontSize;
+  double? get letterSpacing => _letterSpacing;
+  double? get wordSpacing => _wordSpacing;
+  double? get height => _height;
+  double? get decorationThickness => _decorationThickness;
+  Locale? get locale => _locale;
+  Paint? get background => _background;
+  Paint? get foreground => _foreground;
+  List<Shadow>? get shadows => _shadows;
+  List<FontFeature>? get fontFeatures => _fontFeatures;
+  List<FontVariation>? get fontVariations => _fontVariations;
+  TextLeadingDistribution? get leadingDistribution => _leadingDistribution;
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) {
@@ -1793,6 +1810,15 @@ class ParagraphStyle {
   final Locale? _locale;
   final TextLeadingDistribution _leadingDistribution;
 
+  Int32List get encoded => _encoded;
+  String? get fontFamily => _fontFamily;
+  double? get fontSize => _fontSize;
+  double? get height => _height;
+  StrutStyle? get strutStyle => _strutStyle;
+  String? get ellipsis => _ellipsis;
+  Locale? get locale => _locale;
+  TextLeadingDistribution get leadingDistribution => _leadingDistribution;
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) {
@@ -1990,6 +2016,12 @@ class StrutStyle {
   final String? _fontFamily;
   final List<String>? _fontFamilyFallback;
   final TextLeadingDistribution? _leadingDistribution;
+
+  // HACK
+  ByteData get encoded => _encoded;
+  String? get fontFamily => _fontFamily;
+  List<String>? get fontFamilyFallback => _fontFamilyFallback;
+  TextLeadingDistribution? get leadingDistribution => _leadingDistribution;
 
   bool get _enabled => _encoded.lengthInBytes > 0;
 
