@@ -3134,7 +3134,7 @@ base class _NativePath extends NativeFieldWrapperClass1 implements Path {
 
   Uint8List dump() => _dump();
 
-  @Native<Handle Function()>(symbol: 'Path::dump')
+  @Native<Handle Function(Pointer<Void>)>(symbol: 'Path::dump')
   external Uint8List _dump();
 
   @override
