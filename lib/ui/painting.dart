@@ -1108,6 +1108,8 @@ class Paint {
   // C++ unit tests access this.
   @pragma('vm:entry-point')
   final ByteData _data = ByteData(_kDataByteCount);
+  
+  ByteData get data => _data; // HACK
 
   static const int _kIsAntiAliasIndex = 0;
   static const int _kColorIndex = 1;
