@@ -1843,11 +1843,11 @@ class ParagraphStyle {
   int? get maxLines => _encoded[0] & 0x020 == 0x020 ? _encoded[5] : null;
   String? get fontFamily => _encoded[0] & 0x080 == 0x080 ? _fontFamily : null;
   double? get fontSize => _encoded[0] & 0x100 == 0x100 ? _fontSize : null;
-  double? get height => _encoded[0] & 0x400 == 0x400 ? _height : null;
+  double? get height => _encoded[0] & 0x200 == 0x200 ? _height : null;
   TextHeightBehavior? get textHeightBehavior => _encoded[0] & 0x040 == 0x040 ? TextHeightBehavior._fromEncoded(_encoded[6], _leadingDistribution) : null;
   FontWeight? get fontWeight => _encoded[0] & 0x008 == 0x008 ? FontWeight.values[_encoded[3]] : null;
   FontStyle? get fontStyle => _encoded[0] & 0x010 == 0x010 ? FontStyle.values[_encoded[4]] : null;
-  StrutStyle? get strutStyle => _encoded[0] & 0x200 == 0x200 ? _strutStyle : null;
+  StrutStyle? get strutStyle => _encoded[0] & 0x400 == 0x400 ? _strutStyle : null;
   String? get ellipsis => _encoded[0] & 0x800 == 0x800 ? _ellipsis : null;
   Locale? get locale => _encoded[0] & 0x1000 == 0x1000 ? _locale : null;
 
