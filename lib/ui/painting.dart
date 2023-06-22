@@ -2844,7 +2844,9 @@ abstract class Path {
   // see https://skia.org/user/api/SkPath_Reference#SkPath_getBounds
   Rect getBounds();
 
-  Uint8List dump();
+  Uint8List serialize();
+
+  void deserialize(Uint8List bytes);
 
   /// Combines the two paths according to the manner specified by the given
   /// `operation`.
@@ -3138,10 +3140,15 @@ base class _NativePath extends NativeFieldWrapperClass1 implements Path {
   @Native<Bool Function(Pointer<Void>, Pointer<Void>, Pointer<Void>, Int32)>(symbol: 'Path::op')
   external bool _op(_NativePath path1, _NativePath path2, int operation);
 
-  Uint8List dump() => _dump();
+  Uint8List serialize() => _serialize();
 
-  @Native<Handle Function(Pointer<Void>)>(symbol: 'Path::dump')
-  external Uint8List _dump();
+  @Native<Handle Function(Pointer<Void>)>(symbol: 'Path::serialize')
+  external Uint8List _serialize();
+
+  void deserialize(Uint8List bytes) => _deserialize(bytes);
+
+  @Native<Void Function(Pointer<Void>, Handle)>(symbol: 'Path::deserialize')
+  external void _deserialize(Uint8List bytes);
 
   @override
   PathMetrics computeMetrics({bool forceClosed = false}) {
