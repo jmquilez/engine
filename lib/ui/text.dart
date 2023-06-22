@@ -2025,12 +2025,21 @@ class StrutStyle {
        _fontFamily = fontFamily,
        _fontFamilyFallback = fontFamilyFallback;
 
+  StrutStyle.raw({
+    ByteData encoded,
+    TextLeadingDistribution? leadingDistribution,
+    String? fontFamily,
+    List<String>? fontFamilyFallback,
+  }) : _encoded = encoded,
+        _leadingDistribution = leadingDistribution,
+        _fontFamily = fontFamily,
+        _fontFamilyFallback = fontFamilyFallback;
+
   final ByteData _encoded; // Most of the data for strut is encoded.
   final String? _fontFamily;
   final List<String>? _fontFamilyFallback;
   final TextLeadingDistribution? _leadingDistribution;
 
-  // HACK
   ByteData get encoded => _encoded;
   String? get fontFamily => _fontFamily;
   List<String>? get fontFamilyFallback => _fontFamilyFallback;
