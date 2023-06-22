@@ -1843,22 +1843,33 @@ class ParagraphStyle {
   @override
   int get hashCode => Object.hash(Object.hashAll(_encoded), _fontFamily, _fontSize, _height, _ellipsis, _locale, _leadingDistribution);
 
+  TextAlign? get textAlign => _encoded[0] & 0x002 == 0x002 ? TextAlign.values[_encoded[1]] : null;
+  TextDirection? get textDirection => _encoded[0] & 0x004 == 0x004 ? TextDirection.values[_encoded[2]] : null;
+  int? get maxLines => _encoded[0] & 0x020 == 0x020 ? _encoded[5] : null;
+  String? get fontFamily => _encoded[0] & 0x080 == 0x080 ? _fontFamily : null;
+  double? get fontSize => _encoded[0] & 0x100 == 0x100 ? _fontSize : null;
+  double? get height => _encoded[0] & 0x400 == 0x400 ? _height : null;
+  TextHeightBehavior? get textHeightBehavior => _encoded[0] & 0x040 == 0x040 ? TextHeightBehavior._fromEncoded(_encoded[6], _leadingDistribution) : null;
+  FontWeight? get fontWeight => _encoded[0] & 0x008 == 0x008 ? FontWeight.values[_encoded[3]] : null;
+  FontStyle? get fontStyle => _encoded[0] & 0x010 == 0x010 ? FontStyle.values[_encoded[4]] : null;
+  StrutStyle? get strutStyle => _encoded[0] & 0x200 == 0x200 ? _height : null;
+  String? get ellipsis => _encoded[0] & 0x800 == 0x800 ? _ellipsis : null;
+  Locale? get locale => _encoded[0] & 0x1000 == 0x1000 ? _locale : null;
+
   @override
   String toString() {
     return 'ParagraphStyle('
-             'textAlign: ${     _encoded[0] & 0x002 == 0x002 ? TextAlign.values[_encoded[1]]     : "unspecified"}, '
-             'textDirection: ${ _encoded[0] & 0x004 == 0x004 ? TextDirection.values[_encoded[2]] : "unspecified"}, '
-             'fontWeight: ${    _encoded[0] & 0x008 == 0x008 ? FontWeight.values[_encoded[3]]    : "unspecified"}, '
-             'fontStyle: ${     _encoded[0] & 0x010 == 0x010 ? FontStyle.values[_encoded[4]]     : "unspecified"}, '
-             'maxLines: ${      _encoded[0] & 0x020 == 0x020 ? _encoded[5]                       : "unspecified"}, '
-             'textHeightBehavior: ${
-                                _encoded[0] & 0x040 == 0x040 ?
-                                          TextHeightBehavior._fromEncoded(_encoded[6], _leadingDistribution).toString() : "unspecified"}, '
-             'fontFamily: ${    _encoded[0] & 0x080 == 0x080 ? _fontFamily                       : "unspecified"}, '
-             'fontSize: ${      _encoded[0] & 0x100 == 0x100 ? _fontSize                         : "unspecified"}, '
-             'height: ${        _encoded[0] & 0x200 == 0x200 ? "${_height}x"                     : "unspecified"}, '
-             'ellipsis: ${      _encoded[0] & 0x400 == 0x400 ? '"$_ellipsis"'                    : "unspecified"}, '
-             'locale: ${        _encoded[0] & 0x800 == 0x800 ? _locale                           : "unspecified"}'
+             'textAlign: ${textAlign ?? "unspecified"}, '
+             'textDirection: ${textDirection ?? "unspecified"}, '
+             'fontWeight: ${fontWeight ?? "unspecified"}, '
+             'fontStyle: ${fontStyle ?? "unspecified"}, '
+             'maxLines: ${maxLines ?? "unspecified"}, '
+             'textHeightBehavior: ${textHeightBehavior ?? "unspecified"}, '
+             'fontFamily: ${fontFamily ?? "unspecified"}, '
+             'fontSize: ${fontSize ?? "unspecified"}, '
+             'height: ${height ?? "unspecified"}, '
+             'ellipsis: ${ellipsis ?? "unspecified"}, '
+             'locale: ${locale ?? "unspecified"}'
            ')';
   }
 }
