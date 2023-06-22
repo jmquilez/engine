@@ -1109,7 +1109,11 @@ class Paint {
   @pragma('vm:entry-point')
   final ByteData _data = ByteData(_kDataByteCount);
 
-  ByteData get data => _data; // HACK
+  // HACK
+  Paint.raw(ByteData data) {
+    _data.buffer.asUint8List().setRange(0, _kDataByteCount, data.buffer.asUint8List());
+  }
+  ByteData get data => _data;
 
   static const int _kIsAntiAliasIndex = 0;
   static const int _kColorIndex = 1;
