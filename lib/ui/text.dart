@@ -1055,6 +1055,10 @@ class TextDecoration {
     return (_mask | other._mask) == _mask;
   }
 
+  // HACK
+  const TextDecoration.raw(this._mask);
+  int get mask => _mask;
+
   /// Do not draw a decoration
   static const TextDecoration none = TextDecoration._(0x0);
 
