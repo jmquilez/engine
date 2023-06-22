@@ -1816,15 +1816,6 @@ class ParagraphStyle {
   final Locale? _locale;
   final TextLeadingDistribution _leadingDistribution;
 
-  Int32List get encoded => _encoded;
-  String? get fontFamily => _fontFamily;
-  double? get fontSize => _fontSize;
-  double? get height => _height;
-  StrutStyle? get strutStyle => _strutStyle;
-  String? get ellipsis => _ellipsis;
-  Locale? get locale => _locale;
-  TextLeadingDistribution get leadingDistribution => _leadingDistribution;
-
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) {
@@ -1856,7 +1847,7 @@ class ParagraphStyle {
   TextHeightBehavior? get textHeightBehavior => _encoded[0] & 0x040 == 0x040 ? TextHeightBehavior._fromEncoded(_encoded[6], _leadingDistribution) : null;
   FontWeight? get fontWeight => _encoded[0] & 0x008 == 0x008 ? FontWeight.values[_encoded[3]] : null;
   FontStyle? get fontStyle => _encoded[0] & 0x010 == 0x010 ? FontStyle.values[_encoded[4]] : null;
-  StrutStyle? get strutStyle => _encoded[0] & 0x200 == 0x200 ? _height : null;
+  StrutStyle? get strutStyle => _encoded[0] & 0x200 == 0x200 ? _strutStyle : null;
   String? get ellipsis => _encoded[0] & 0x800 == 0x800 ? _ellipsis : null;
   Locale? get locale => _encoded[0] & 0x1000 == 0x1000 ? _locale : null;
 
@@ -2030,7 +2021,7 @@ class StrutStyle {
        _fontFamilyFallback = fontFamilyFallback;
 
   StrutStyle.raw({
-    ByteData encoded,
+    required ByteData encoded,
     TextLeadingDistribution? leadingDistribution,
     String? fontFamily,
     List<String>? fontFamilyFallback,
